@@ -742,7 +742,8 @@ async function doLogin(){
       document.getElementById('userLabel').textContent=currentUser.display;
       const isPrivileged = currentUser.role === 'Admin' || currentUser.role === 'Supervisor';
       document.getElementById('editAllotBtn').style.display = isPrivileged ? '' : 'none';
-      document.getElementById('toggleAddBtn').style.display = '';
+      const isViewer = currentUser.role === 'Viewer' || currentUser.role === 'viewer';
+      document.getElementById('toggleAddBtn').style.display = isViewer ? 'none' : '';
       await init();
     } else {
       err.textContent = data.message || 'Invalid credentials';
@@ -774,7 +775,8 @@ async function checkSession() {
       document.getElementById('userLabel').textContent=currentUser.display;
       const isPrivileged = currentUser.role === 'Admin' || currentUser.role === 'Supervisor';
       document.getElementById('editAllotBtn').style.display = isPrivileged ? '' : 'none';
-      document.getElementById('toggleAddBtn').style.display = '';
+      const isViewer = currentUser.role === 'Viewer' || currentUser.role === 'viewer';
+      document.getElementById('toggleAddBtn').style.display = isViewer ? 'none' : '';
       await init();
     }
   } catch (e) {
@@ -1334,17 +1336,20 @@ function renderMonth(){
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'row-actions';
     
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-outline btn-sm';
-    editBtn.textContent = 'Edit';
-    editBtn.addEventListener('click', () => editEntry(e.id));
-    actionsDiv.appendChild(editBtn);
-    
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn btn-danger btn-sm';
-    delBtn.textContent = '✕';
-    delBtn.addEventListener('click', () => openDeleteModal(e.id));
-    actionsDiv.appendChild(delBtn);
+    const isViewer = currentUser && (currentUser.role === 'Viewer' || currentUser.role === 'viewer');
+    if (!isViewer) {
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn btn-outline btn-sm';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => editEntry(e.id));
+      actionsDiv.appendChild(editBtn);
+      
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-danger btn-sm';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', () => openDeleteModal(e.id));
+      actionsDiv.appendChild(delBtn);
+    }
     
     tdActions.appendChild(actionsDiv);
     tr.appendChild(tdActions);

@@ -12,6 +12,12 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['role'])) {
 $username = $_SESSION['username'];
 $role = $_SESSION['role'];
 
+if ($role === 'Viewer') {
+    http_response_code(403);
+    echo json_encode(["success" => false, "message" => "Viewers are not allowed to add or edit entries."]);
+    exit;
+}
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 $project = $data['project'] ?? '';

@@ -62,6 +62,12 @@ try {
         exit;
     }
 
+    if ($user_role === 'Viewer') {
+        http_response_code(403);
+        echo json_encode(["success" => false, "message" => "Viewers are not allowed to perform this action."]);
+        exit;
+    }
+
     $input = file_get_contents("php://input");
     $data = json_decode($input, true);
 
