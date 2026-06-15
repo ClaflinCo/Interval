@@ -17,18 +17,18 @@ if(empty($username) || empty($password)){
 
 $ip = $_SERVER['REMOTE_ADDR'] ?? '';
 
-// 1. Clean up stale attempts (older than 15 minutes)
-$cleanStmt = $conn->prepare("DELETE FROM login_attempts WHERE attempt_time < DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
+// 1. Clean up stale attempts (older than 30 days)
+$cleanStmt = $conn->prepare("DELETE FROM login_attempts WHERE attempt_time < DATE_SUB(NOW(), INTERVAL 30 DAY)");
 if ($cleanStmt) {
     $cleanStmt->execute();
     $cleanStmt->close();
 }
 
-// 2. Count failed attempts by IP and username in last 15 minutes
+// 2. Count failed attempts by IP and username
 $ipCount = 0;
 $userCount = 0;
 
-$ipStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM login_attempts WHERE ip_address = ? AND attempt_time >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
+$ipStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM login_attempts WHERE ip_address = ?");
 if ($ipStmt) {
     $ipStmt->bind_param("s", $ip);
     $ipStmt->execute();
@@ -39,7 +39,7 @@ if ($ipStmt) {
     $ipStmt->close();
 }
 
-$userStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM login_attempts WHERE username = ? AND attempt_time >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
+$userStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM login_attempts WHERE username = ?");
 if ($userStmt) {
     $userStmt->bind_param("s", $username);
     $userStmt->execute();
@@ -55,7 +55,7 @@ $failures = max($ipCount, $userCount);
 // Lockout after 5 failures
 if ($failures >= 5) {
     http_response_code(429);
-    echo json_encode(["status" => "error", "message" => "Too many failed login attempts. Locked out for 15 minutes."]);
+    echo json_encode(["status" => "error", "message" => "Too many failed login attempts. Please reach out to an admin for assistance."]);
     exit;
 }
 
@@ -104,7 +104,8 @@ if($user = $result->fetch_assoc()){
             $logStmt->execute();
             $logStmt->close();
         }
-        echo json_encode(["status" => "error", "message" => "Invalid username or password."]);
+        $remaining = max(0, 5 - ($failures + 1));
+        echo json_encode(["status" => "error", "message" => "Incorrect username or password. {$remaining} attempts remaining."]);
     }
 } else {
     // Log failed attempt
@@ -114,7 +115,8 @@ if($user = $result->fetch_assoc()){
         $logStmt->execute();
         $logStmt->close();
     }
-    echo json_encode(["status" => "error", "message" => "Invalid username or password."]);
+    $remaining = max(0, 5 - ($failures + 1));
+    echo json_encode(["status" => "error", "message" => "Incorrect username or password. {$remaining} attempts remaining."]);
 }
 
 } catch (Throwable $e) {

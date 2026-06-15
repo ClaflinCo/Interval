@@ -53,6 +53,15 @@ MOCK_DATA = {
     ]
 }
 
+MOCK_LOCKOUTS = {
+    "users": [
+        {"username": "locked_user", "count": 5, "last_attempt": "2026-06-15 10:00:00"}
+    ],
+    "ips": [
+        {"ip_address": "192.168.1.100", "count": 6, "last_attempt": "2026-06-15 10:05:00"}
+    ]
+}
+
 class MockHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/api/check_session.php'):
@@ -68,6 +77,17 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps(MOCK_DATA).encode())
+        elif self.path.startswith('/api/admin_lockouts.php'):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            response = {
+                "success": True,
+                "users": MOCK_LOCKOUTS["users"],
+                "ips": MOCK_LOCKOUTS["ips"]
+            }
+            self.wfile.write(json.dumps(response).encode())
         else:
             super().do_GET()
 
@@ -86,6 +106,16 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
 
         if self.path.startswith('/api/login.php'):
             response = {"success": True, "user": {"username": "admin", "display": "Admin User", "role": "Admin"}}
+            self.wfile.write(json.dumps(response).encode())
+
+        elif self.path.startswith('/api/admin_lockouts.php'):
+            type_val = data.get('type')
+            target_val = data.get('target')
+            if type_val == 'username':
+                MOCK_LOCKOUTS["users"] = [u for u in MOCK_LOCKOUTS["users"] if u["username"] != target_val]
+            elif type_val == 'ip':
+                MOCK_LOCKOUTS["ips"] = [ip for ip in MOCK_LOCKOUTS["ips"] if ip["ip_address"] != target_val]
+            response = {"success": True, "message": "Lockout reset successfully."}
             self.wfile.write(json.dumps(response).encode())
 
         elif self.path.startswith('/api/save_entry.php'):

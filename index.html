@@ -187,6 +187,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
 /* NOTIFICATION PANEL */
 .notif-panel{position:fixed;top:72px;right:0;width:360px;height:calc(100vh - 72px);background:white;border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(13,43,78,.12);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
 .notif-panel.open{transform:translateX(0)}
+/* SETTINGS PANEL */
+.settings-panel{position:fixed;top:72px;right:0;width:380px;height:calc(100vh - 72px);background:white;border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(13,43,78,.12);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.settings-panel.open{transform:translateX(0)}
 .notif-panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#f8f9fb}
 .notif-panel-title{font-size:1rem;color:var(--navy)}
 .notif-panel-actions{display:flex;gap:8px;align-items:center}
@@ -288,6 +291,12 @@ tbody td{padding:10px 13px;vertical-align:middle}
       <button class="btn btn-ghost btn-sm" id="refreshBtn" onclick="init()" title="Refresh data from server"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>Refresh</button>
       <button class="btn btn-ghost btn-sm" onclick="openExportModal()"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
       <button class="bell-btn" onclick="toggleNotifPanel()" title="Notifications"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><span class="bell-count" id="bellCount">0</span></button>
+      <button id="adminSettingsBtn" class="bell-btn" style="display:none;" onclick="toggleAdminSettingsPanel()" title="Admin Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
     </div>
   </header>
@@ -320,6 +329,46 @@ tbody td{padding:10px 13px;vertical-align:middle}
     </div>
     <div class="notif-list" id="notifList">
       <div style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem">No notifications yet.</div>
+    </div>
+  </aside>
+
+  <!-- ADMIN SETTINGS PANEL -->
+  <aside class="settings-panel" id="adminSettingsPanel">
+    <div class="notif-panel-header" style="background:#f0f4f8; border-bottom:1.5px solid var(--border);">
+      <span class="notif-panel-title" style="font-weight:700; color:var(--navy);">Admin Settings</span>
+      <div class="notif-panel-actions">
+        <button class="close-notif-btn" onclick="toggleAdminSettingsPanel()">✕</button>
+      </div>
+    </div>
+    <div class="notif-list" style="padding:22px; overflow-y:auto;">
+      <!-- Lockout Management Section (hidden if there are no lockouts) -->
+      <div id="lockoutManagerSection" style="display:none;">
+        <h3 style="font-size:0.9rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; font-weight:700;">
+          Active Account Lockouts
+        </h3>
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:15px;">
+          The following users or IP addresses have been locked out due to 5 or more failed login attempts. Reset their counters to unlock their access.
+        </p>
+        <div class="table-wrap" style="border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f8f9fa;">
+                <th style="padding:10px 15px; text-align:left; font-size:0.7rem;">Lockout Target</th>
+                <th style="padding:10px 15px; text-align:center; font-size:0.7rem;">Failed Attempts</th>
+                <th style="padding:10px 15px; text-align:left; font-size:0.7rem;">Last Attempt Time</th>
+                <th style="padding:10px 15px; text-align:right; font-size:0.7rem;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="lockoutTableBody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Placeholder when no lockouts -->
+      <div id="noLockoutsPlaceholder" style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem;display:none;">
+        No active account lockouts.
+      </div>
     </div>
   </aside>
 
@@ -438,6 +487,8 @@ tbody td{padding:10px 13px;vertical-align:middle}
           </table>
         </div>
       </div>
+      
+
     </main>
   </div>
 </div>
@@ -605,7 +656,7 @@ function getESTDate() {
 }
 
 let currentMonth=MONTHS[getESTDate().getMonth()],currentUser=null,state={},notifications=[],pending=[],
-    deleteTarget=null,editingId=null,isHoursOverride=false,notifPanelOpen=false,exportType='xlsx';
+    deleteTarget=null,editingId=null,isHoursOverride=false,notifPanelOpen=false,adminSettingsPanelOpen=false,exportType='xlsx';
 
 // ═══════════════════════════════════════════════════
 //  HELPERS
@@ -711,10 +762,7 @@ function calcHours(e){
 
 function getActiveProjectsForMonth(m) {
   const md = state[m] || {allotments:{},entries:[]};
-  const list = [
-    ...Object.keys(md.allotments || {}),
-    ...(md.entries || []).map(e => e.project)
-  ];
+  const list = Object.keys(md.allotments || {}).filter(p => md.allotments[p] > 0);
   const unique = [...new Set(list.map(p => String(p).trim()).filter(p => p.length > 0))];
   unique.sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   return unique;
@@ -744,6 +792,8 @@ async function doLogin(){
       document.getElementById('editAllotBtn').style.display = isPrivileged ? '' : 'none';
       const isViewer = currentUser.role === 'Viewer' || currentUser.role === 'viewer';
       document.getElementById('toggleAddBtn').style.display = isViewer ? 'none' : '';
+      const isAdmin = currentUser.role === 'Admin';
+      document.getElementById('adminSettingsBtn').style.display = isAdmin ? 'inline-block' : 'none';
       await init();
     } else {
       err.textContent = data.message || 'Invalid credentials';
@@ -762,6 +812,12 @@ async function doLogout(){
   document.getElementById('loginUser').value='';
   document.getElementById('loginPass').value='';
   if(notifPanelOpen)toggleNotifPanel();
+  if(adminSettingsPanelOpen) {
+    adminSettingsPanelOpen = false;
+    document.getElementById('adminSettingsPanel').classList.remove('open');
+  }
+  const btn = document.getElementById('adminSettingsBtn');
+  if (btn) btn.style.display = 'none';
 }
 
 async function checkSession() {
@@ -777,6 +833,8 @@ async function checkSession() {
       document.getElementById('editAllotBtn').style.display = isPrivileged ? '' : 'none';
       const isViewer = currentUser.role === 'Viewer' || currentUser.role === 'viewer';
       document.getElementById('toggleAddBtn').style.display = isViewer ? 'none' : '';
+      const isAdmin = currentUser.role === 'Admin';
+      document.getElementById('adminSettingsBtn').style.display = isAdmin ? 'inline-block' : 'none';
       await init();
     }
   } catch (e) {
@@ -793,24 +851,42 @@ function updateProjectUI() {
   const monthProjects = getActiveProjectsForMonth(currentMonth);
   const dropdownProjects = isAdmin ? PROJECTS : monthProjects;
   
+  const editingEntry = editingId ? (state[currentMonth]?.entries || []).find(x=>String(x.id)===String(editingId)) : null;
+  const editingProject = editingEntry ? editingEntry.project : '';
+
   const fProject = document.getElementById('fProject');
   if (fProject) {
-    const fProjectVal = fProject.value;
-    fProject.innerHTML = '<option value="">— Select Project —</option>' + dropdownProjects.map(opStr).join('');
+    const fProjectVal = fProject.value || editingProject;
+    let listToUse = [...dropdownProjects];
+    if (fProjectVal && !listToUse.includes(fProjectVal)) {
+      listToUse.push(fProjectVal);
+      listToUse.sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    }
+    fProject.innerHTML = '<option value="">— Select Project —</option>' + listToUse.map(opStr).join('');
     fProject.value = fProjectVal;
   }
 
   const uiProjectFilter = document.getElementById('uiProjectFilter');
   if (uiProjectFilter) {
     const uiProjectFilterVal = uiProjectFilter.value;
-    uiProjectFilter.innerHTML = '<option value="">All Projects</option>' + dropdownProjects.map(opStr).join('');
+    let listToUse = [...dropdownProjects];
+    if (uiProjectFilterVal && !listToUse.includes(uiProjectFilterVal)) {
+      listToUse.push(uiProjectFilterVal);
+      listToUse.sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    }
+    uiProjectFilter.innerHTML = '<option value="">All Projects</option>' + listToUse.map(opStr).join('');
     uiProjectFilter.value = uiProjectFilterVal;
   }
 
   const exportProject = document.getElementById('exportProject');
   if (exportProject) {
     const exportProjectVal = exportProject.value;
-    exportProject.innerHTML = '<option value="">All Projects</option>' + dropdownProjects.map(opStr).join('');
+    let listToUse = [...dropdownProjects];
+    if (exportProjectVal && !listToUse.includes(exportProjectVal)) {
+      listToUse.push(exportProjectVal);
+      listToUse.sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    }
+    exportProject.innerHTML = '<option value="">All Projects</option>' + listToUse.map(opStr).join('');
     exportProject.value = exportProjectVal;
   }
 }
@@ -903,7 +979,7 @@ async function init(){
     currentMonth = MONTHS[getESTDate().getMonth()];
   }
 
-  buildTabs();renderMonth();renderNotifications();renderPending();
+  buildTabs();renderMonth();renderNotifications();renderPending();await loadLockouts();
 
   if(rBtn) { rBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>Refresh'; rBtn.disabled = false; }
 }
@@ -915,7 +991,22 @@ function save(){}
 // ═══════════════════════════════════════════════════
 //  NOTIFICATIONS
 // ═══════════════════════════════════════════════════
-function toggleNotifPanel(){notifPanelOpen=!notifPanelOpen;document.getElementById('notifPanel').classList.toggle('open',notifPanelOpen);}
+function toggleNotifPanel(){
+  notifPanelOpen=!notifPanelOpen;
+  document.getElementById('notifPanel').classList.toggle('open',notifPanelOpen);
+  if(notifPanelOpen && adminSettingsPanelOpen) {
+    adminSettingsPanelOpen = false;
+    document.getElementById('adminSettingsPanel').classList.remove('open');
+  }
+}
+function toggleAdminSettingsPanel(){
+  adminSettingsPanelOpen=!adminSettingsPanelOpen;
+  document.getElementById('adminSettingsPanel').classList.toggle('open',adminSettingsPanelOpen);
+  if(adminSettingsPanelOpen && notifPanelOpen) {
+    notifPanelOpen = false;
+    document.getElementById('notifPanel').classList.remove('open');
+  }
+}
 async function pushNotif(type,title,msg,month){
   const tempId = 'temp_' + Math.random().toString(36).substr(2, 9);
   const time = now();
@@ -2104,6 +2195,136 @@ async function submitCreateProject(){
     }
   } catch(e) {
     await showAlert("Network error while creating project.", "Connection Error", "error");
+  }
+}
+
+async function loadLockouts() {
+  const btn = document.getElementById('adminSettingsBtn');
+  if (!currentUser || currentUser.role !== 'Admin') {
+    if (btn) btn.style.display = 'none';
+    if (adminSettingsPanelOpen) {
+      adminSettingsPanelOpen = false;
+      document.getElementById('adminSettingsPanel').classList.remove('open');
+    }
+    return;
+  }
+  if (btn) btn.style.display = 'inline-block';
+  try {
+    const res = await fetch('api/admin_lockouts.php?_=' + Date.now(), { cache: 'no-store' });
+    const data = await res.json();
+    if (data.success) {
+      const users = data.users || [];
+      const ips = data.ips || [];
+      const totalLockouts = users.length + ips.length;
+      
+      const section = document.getElementById('lockoutManagerSection');
+      const placeholder = document.getElementById('noLockoutsPlaceholder');
+      const tbody = document.getElementById('lockoutTableBody');
+      
+      if (totalLockouts > 0) {
+        tbody.innerHTML = '';
+        
+        // Populate users
+        users.forEach(u => {
+          const tr = document.createElement('tr');
+          
+          const tdTarget = document.createElement('td');
+          tdTarget.style.padding = '10px 15px';
+          tdTarget.style.fontWeight = '600';
+          tdTarget.textContent = `User: ${u.username}`;
+          tr.appendChild(tdTarget);
+          
+          const tdCount = document.createElement('td');
+          tdCount.style.padding = '10px 15px';
+          tdCount.style.textAlign = 'center';
+          tdCount.textContent = u.count;
+          tr.appendChild(tdCount);
+          
+          const tdTime = document.createElement('td');
+          tdTime.style.padding = '10px 15px';
+          tdTime.textContent = u.last_attempt;
+          tr.appendChild(tdTime);
+          
+          const tdAction = document.createElement('td');
+          tdAction.style.padding = '10px 15px';
+          tdAction.style.textAlign = 'right';
+          const btnUnlock = document.createElement('button');
+          btnUnlock.className = 'btn btn-navy btn-sm';
+          btnUnlock.textContent = 'Unlock';
+          btnUnlock.addEventListener('click', () => resetLockout('username', u.username));
+          tdAction.appendChild(btnUnlock);
+          tr.appendChild(tdAction);
+          
+          tbody.appendChild(tr);
+        });
+        
+        // Populate IPs
+        ips.forEach(ip => {
+          const tr = document.createElement('tr');
+          
+          const tdTarget = document.createElement('td');
+          tdTarget.style.padding = '10px 15px';
+          tdTarget.style.fontWeight = '600';
+          tdTarget.textContent = `IP: ${ip.ip_address}`;
+          tr.appendChild(tdTarget);
+          
+          const tdCount = document.createElement('td');
+          tdCount.style.padding = '10px 15px';
+          tdCount.style.textAlign = 'center';
+          tdCount.textContent = ip.count;
+          tr.appendChild(tdCount);
+          
+          const tdTime = document.createElement('td');
+          tdTime.style.padding = '10px 15px';
+          tdTime.textContent = ip.last_attempt;
+          tr.appendChild(tdTime);
+          
+          const tdAction = document.createElement('td');
+          tdAction.style.padding = '10px 15px';
+          tdAction.style.textAlign = 'right';
+          const btnUnlock = document.createElement('button');
+          btnUnlock.className = 'btn btn-navy btn-sm';
+          btnUnlock.textContent = 'Unlock';
+          btnUnlock.addEventListener('click', () => resetLockout('ip', ip.ip_address));
+          tdAction.appendChild(btnUnlock);
+          tr.appendChild(tdAction);
+          
+          tbody.appendChild(tr);
+        });
+        
+        if (section) section.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+      } else {
+        if (section) section.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load lockouts:', err);
+  }
+}
+
+async function resetLockout(type, target) {
+  const confirmMsg = `Are you sure you want to unlock ${type === 'ip' ? 'IP' : 'user'} "${target}"?`;
+  const confirmed = await showConfirm(confirmMsg, "Reset Lockout");
+  if (!confirmed) return;
+  
+  try {
+    const res = await fetch('api/admin_lockouts.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, target })
+    });
+    const data = await res.json();
+    if (data.success) {
+      await showAlert(`${target} has been successfully unlocked.`, "Success", "success");
+      await loadLockouts();
+    } else {
+      await showAlert(data.message || 'Failed to reset lockout.', 'Error', 'error');
+    }
+  } catch (err) {
+    console.error('Failed to reset lockout:', err);
+    await showAlert('Connection error.', 'Error', 'error');
   }
 }
 
