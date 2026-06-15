@@ -53,14 +53,15 @@ MOCK_DATA = {
     ]
 }
 
-MOCK_LOCKOUTS = {
-    "users": [
-        {"username": "locked_user", "count": 5, "last_attempt": "2026-06-15 10:00:00"}
-    ],
-    "ips": [
-        {"ip_address": "192.168.1.100", "count": 6, "last_attempt": "2026-06-15 10:05:00"}
-    ]
-}
+MOCK_LOCKOUTS = [
+    {
+        "username": "locked_user",
+        "ip_address": "192.168.1.100",
+        "count": 6,
+        "last_attempt": "2026-06-15 10:05:00",
+        "type": "both"
+    }
+]
 
 class MockHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -84,8 +85,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             response = {
                 "success": True,
-                "users": MOCK_LOCKOUTS["users"],
-                "ips": MOCK_LOCKOUTS["ips"]
+                "lockouts": MOCK_LOCKOUTS
             }
             self.wfile.write(json.dumps(response).encode())
         else:
@@ -111,10 +111,19 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path.startswith('/api/admin_lockouts.php'):
             type_val = data.get('type')
             target_val = data.get('target')
-            if type_val == 'username':
-                MOCK_LOCKOUTS["users"] = [u for u in MOCK_LOCKOUTS["users"] if u["username"] != target_val]
+            global MOCK_LOCKOUTS
+            if type_val == 'both':
+                parts = target_val.split('|')
+                u_target = parts[0] if len(parts) > 0 else ''
+                ip_target = parts[1] if len(parts) > 1 else ''
+                MOCK_LOCKOUTS = [
+                    l for l in MOCK_LOCKOUTS
+                    if (not u_target or l.get("username") != u_target) and (not ip_target or l.get("ip_address") != ip_target)
+                ]
+            elif type_val == 'username':
+                MOCK_LOCKOUTS = [l for l in MOCK_LOCKOUTS if l.get("username") != target_val]
             elif type_val == 'ip':
-                MOCK_LOCKOUTS["ips"] = [ip for ip in MOCK_LOCKOUTS["ips"] if ip["ip_address"] != target_val]
+                MOCK_LOCKOUTS = [l for l in MOCK_LOCKOUTS if l.get("ip_address") != target_val]
             response = {"success": True, "message": "Lockout reset successfully."}
             self.wfile.write(json.dumps(response).encode())
 

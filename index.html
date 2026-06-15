@@ -188,7 +188,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
 .notif-panel{position:fixed;top:72px;right:0;width:360px;height:calc(100vh - 72px);background:white;border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(13,43,78,.12);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
 .notif-panel.open{transform:translateX(0)}
 /* SETTINGS PANEL */
-.settings-panel{position:fixed;top:72px;right:0;width:460px;height:calc(100vh - 72px);background:white;border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(13,43,78,.12);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.settings-panel{position:fixed;top:72px;right:0;width:580px;height:calc(100vh - 72px);background:white;border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(13,43,78,.12);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
 .settings-panel.open{transform:translateX(0)}
 .notif-panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#f8f9fb}
 .notif-panel-title{font-size:1rem;color:var(--navy)}
@@ -354,10 +354,11 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <table style="width:100%; border-collapse:collapse;">
             <thead>
               <tr style="background:#f8f9fa;">
-                <th style="padding:10px 15px; text-align:left; font-size:0.7rem;">Lockout Target</th>
-                <th style="padding:10px 15px; text-align:center; font-size:0.7rem;">Failed Attempts</th>
-                <th style="padding:10px 15px; text-align:left; font-size:0.7rem;">Last Attempt Time</th>
-                <th style="padding:10px 15px; text-align:right; font-size:0.7rem;">Action</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">User</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">IP Address</th>
+                <th style="padding:10px 10px; text-align:center; font-size:0.7rem;">Attempts</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Last Attempt</th>
+                <th style="padding:10px 10px; text-align:right; font-size:0.7rem;">Action</th>
               </tr>
             </thead>
             <tbody id="lockoutTableBody">
@@ -2216,9 +2217,8 @@ async function loadLockouts() {
     const res = await fetch('api/admin_lockouts.php?_=' + Date.now(), { cache: 'no-store' });
     const data = await res.json();
     if (data.success) {
-      const users = data.users || [];
-      const ips = data.ips || [];
-      const totalLockouts = users.length + ips.length;
+      const lockouts = data.lockouts || [];
+      const totalLockouts = lockouts.length;
       
       if (lc) {
         lc.textContent = totalLockouts;
@@ -2232,68 +2232,41 @@ async function loadLockouts() {
       if (totalLockouts > 0) {
         tbody.innerHTML = '';
         
-        // Populate users
-        users.forEach(u => {
+        lockouts.forEach(l => {
           const tr = document.createElement('tr');
           
-          const tdTarget = document.createElement('td');
-          tdTarget.style.padding = '10px 15px';
-          tdTarget.style.fontWeight = '600';
-          tdTarget.textContent = `User: ${u.username}`;
-          tr.appendChild(tdTarget);
+          const tdUser = document.createElement('td');
+          tdUser.style.padding = '10px 10px';
+          tdUser.style.fontWeight = '600';
+          tdUser.textContent = l.username || '—';
+          tr.appendChild(tdUser);
+          
+          const tdIP = document.createElement('td');
+          tdIP.style.padding = '10px 10px';
+          tdIP.style.fontWeight = '600';
+          tdIP.textContent = l.ip_address || '—';
+          tr.appendChild(tdIP);
           
           const tdCount = document.createElement('td');
-          tdCount.style.padding = '10px 15px';
+          tdCount.style.padding = '10px 10px';
           tdCount.style.textAlign = 'center';
-          tdCount.textContent = u.count;
+          tdCount.textContent = l.count || 0;
           tr.appendChild(tdCount);
           
           const tdTime = document.createElement('td');
-          tdTime.style.padding = '10px 15px';
-          tdTime.textContent = u.last_attempt;
+          tdTime.style.padding = '10px 10px';
+          tdTime.style.fontSize = '0.75rem';
+          tdTime.textContent = l.last_attempt || '—';
           tr.appendChild(tdTime);
           
           const tdAction = document.createElement('td');
-          tdAction.style.padding = '10px 15px';
+          tdAction.style.padding = '10px 10px';
           tdAction.style.textAlign = 'right';
           const btnUnlock = document.createElement('button');
           btnUnlock.className = 'btn btn-navy btn-sm';
           btnUnlock.textContent = 'Unlock';
-          btnUnlock.addEventListener('click', () => resetLockout('username', u.username));
-          tdAction.appendChild(btnUnlock);
-          tr.appendChild(tdAction);
-          
-          tbody.appendChild(tr);
-        });
-        
-        // Populate IPs
-        ips.forEach(ip => {
-          const tr = document.createElement('tr');
-          
-          const tdTarget = document.createElement('td');
-          tdTarget.style.padding = '10px 15px';
-          tdTarget.style.fontWeight = '600';
-          tdTarget.textContent = `IP: ${ip.ip_address}`;
-          tr.appendChild(tdTarget);
-          
-          const tdCount = document.createElement('td');
-          tdCount.style.padding = '10px 15px';
-          tdCount.style.textAlign = 'center';
-          tdCount.textContent = ip.count;
-          tr.appendChild(tdCount);
-          
-          const tdTime = document.createElement('td');
-          tdTime.style.padding = '10px 15px';
-          tdTime.textContent = ip.last_attempt;
-          tr.appendChild(tdTime);
-          
-          const tdAction = document.createElement('td');
-          tdAction.style.padding = '10px 15px';
-          tdAction.style.textAlign = 'right';
-          const btnUnlock = document.createElement('button');
-          btnUnlock.className = 'btn btn-navy btn-sm';
-          btnUnlock.textContent = 'Unlock';
-          btnUnlock.addEventListener('click', () => resetLockout('ip', ip.ip_address));
+          const targetVal = `${l.username || ''}|${l.ip_address || ''}`;
+          btnUnlock.addEventListener('click', () => resetLockout('both', targetVal));
           tdAction.appendChild(btnUnlock);
           tr.appendChild(tdAction);
           
@@ -2313,7 +2286,25 @@ async function loadLockouts() {
 }
 
 async function resetLockout(type, target) {
-  const confirmMsg = `Are you sure you want to unlock ${type === 'ip' ? 'IP' : 'user'} "${target}"?`;
+  let confirmMsg = `Are you sure you want to unlock this account?`;
+  let displayTarget = target;
+  if (type === 'both') {
+    const parts = target.split('|');
+    const u = parts[0];
+    const ip = parts[1];
+    if (u && ip) {
+      confirmMsg = `Unlock user "${u}" and IP "${ip}"?`;
+      displayTarget = `User "${u}" and IP "${ip}"`;
+    } else if (u) {
+      confirmMsg = `Unlock user "${u}"?`;
+      displayTarget = `User "${u}"`;
+    } else if (ip) {
+      confirmMsg = `Unlock IP "${ip}"?`;
+      displayTarget = `IP "${ip}"`;
+    }
+  } else {
+    confirmMsg = `Are you sure you want to unlock ${type === 'ip' ? 'IP' : 'user'} "${target}"?`;
+  }
   const confirmed = await showConfirm(confirmMsg, "Reset Lockout");
   if (!confirmed) return;
   
@@ -2325,7 +2316,7 @@ async function resetLockout(type, target) {
     });
     const data = await res.json();
     if (data.success) {
-      await showAlert(`${target} has been successfully unlocked.`, "Success", "success");
+      await showAlert(`${displayTarget} has been successfully unlocked.`, "Success", "success");
       await loadLockouts();
     } else {
       await showAlert(data.message || 'Failed to reset lockout.', 'Error', 'error');
