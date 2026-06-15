@@ -188,7 +188,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
 .notif-panel{position:fixed;top:72px;right:0;width:360px;height:calc(100vh - 72px);background:white;border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(13,43,78,.12);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
 .notif-panel.open{transform:translateX(0)}
 /* SETTINGS PANEL */
-.settings-panel{position:fixed;top:72px;right:0;width:380px;height:calc(100vh - 72px);background:white;border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(13,43,78,.12);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.settings-panel{position:fixed;top:72px;right:0;width:460px;height:calc(100vh - 72px);background:white;border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(13,43,78,.12);display:flex;flex-direction:column;z-index:100;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
 .settings-panel.open{transform:translateX(0)}
 .notif-panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#f8f9fb}
 .notif-panel-title{font-size:1rem;color:var(--navy)}
@@ -243,7 +243,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
 .approval-header{padding:14px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:#fffbf0}
 .pending-row td{background:#fffbf0}
 @keyframes fadeIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
-@media(max-width:900px){.stats-row{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr 1fr}.form-grid-3{grid-template-columns:1fr}.notif-panel{width:100%}.export-row{grid-template-columns:1fr}}
+@media(max-width:900px){.stats-row{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr 1fr}.form-grid-3{grid-template-columns:1fr}.notif-panel{width:100%}.settings-panel{width:100%}.export-row{grid-template-columns:1fr}}
 
 /* Global Filter Bar */
 .filter-bar{display:flex;align-items:center;justify-content:flex-start;gap:20px;background:var(--surface);padding:14px 24px;border-bottom:1px solid var(--border);margin-bottom:20px;border-radius:var(--radius);box-shadow:var(--shadow)}
@@ -296,6 +296,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
+        <span class="bell-count" id="lockoutCount">0</span>
       </button>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
     </div>
@@ -2200,8 +2201,10 @@ async function submitCreateProject(){
 
 async function loadLockouts() {
   const btn = document.getElementById('adminSettingsBtn');
+  const lc = document.getElementById('lockoutCount');
   if (!currentUser || currentUser.role !== 'Admin') {
     if (btn) btn.style.display = 'none';
+    if (lc) lc.style.display = 'none';
     if (adminSettingsPanelOpen) {
       adminSettingsPanelOpen = false;
       document.getElementById('adminSettingsPanel').classList.remove('open');
@@ -2216,6 +2219,11 @@ async function loadLockouts() {
       const users = data.users || [];
       const ips = data.ips || [];
       const totalLockouts = users.length + ips.length;
+      
+      if (lc) {
+        lc.textContent = totalLockouts;
+        lc.style.display = totalLockouts > 0 ? 'inline-block' : 'none';
+      }
       
       const section = document.getElementById('lockoutManagerSection');
       const placeholder = document.getElementById('noLockoutsPlaceholder');
