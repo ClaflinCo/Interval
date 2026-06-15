@@ -1,0 +1,10 @@
+# Block browser access to sensitive files
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files config.sample.php>
+    Order allow,deny
+    Deny from all
+</Files>
