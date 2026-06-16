@@ -78,6 +78,22 @@ $conn->query("
 ");
 log_sync("Checked login_attempts table existence.<br>");
 
+// 2d. Ensure project_change_requests table structure and constraints
+$conn->query("
+    CREATE TABLE IF NOT EXISTS project_change_requests (
+        id VARCHAR(50) PRIMARY KEY,
+        supervisor VARCHAR(100) NOT NULL,
+        project VARCHAR(100) NOT NULL,
+        request_type VARCHAR(100) NOT NULL,
+        details TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        resolved_by VARCHAR(100) DEFAULT NULL,
+        resolved_at TIMESTAMP NULL DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+");
+log_sync("Checked project_change_requests table existence.<br>");
+
 // Ensure month column is VARCHAR(20)
 $r = $conn->query("SHOW COLUMNS FROM project_allotments LIKE 'month'");
 if ($r && $row = $r->fetch_assoc()) {

@@ -371,6 +371,37 @@ tbody td{padding:10px 13px;vertical-align:middle}
       <div id="noLockoutsPlaceholder" style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem;display:none;">
         No active account lockouts.
       </div>
+
+      <!-- Change Request Management Section -->
+      <div id="changeRequestManagerSection" style="margin-top:25px; border-top:1.5px solid var(--border); padding-top:20px; display:none;">
+        <h3 style="font-size:0.9rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; font-weight:700;">
+          Supervisor Change Requests
+        </h3>
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:15px;">
+          The following project change requests have been submitted by supervisors. You can mark them as Resolved or Denied.
+        </p>
+        <div class="table-wrap" style="border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f8f9fa;">
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Project</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Supervisor</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Type</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Details</th>
+                <th style="padding:10px 10px; text-align:center; font-size:0.7rem;">Status</th>
+                <th style="padding:10px 10px; text-align:right; font-size:0.7rem;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="changeRequestTableBody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Placeholder when no change requests -->
+      <div id="noChangeRequestsPlaceholder" style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem;display:none;">
+        No pending change requests.
+      </div>
     </div>
   </aside>
 
@@ -1635,18 +1666,21 @@ function toggleAllotmentEdit(){
       
       if (currentUser && currentUser.role === 'Supervisor') {
         const reqBtn = document.createElement('button');
-        reqBtn.className = 'btn btn-outline';
         reqBtn.textContent = '+';
         reqBtn.title = 'Request project change from admin';
-        reqBtn.style.padding = '0px 6px';
-        reqBtn.style.fontSize = '0.85rem';
-        reqBtn.style.height = '20px';
-        reqBtn.style.minHeight = '20px';
+        reqBtn.style.background = 'none';
+        reqBtn.style.border = 'none';
+        reqBtn.style.padding = '0';
+        reqBtn.style.margin = '0 0 0 8px';
+        reqBtn.style.color = 'var(--gold)';
+        reqBtn.style.fontSize = '1.3rem';
+        reqBtn.style.fontWeight = '800';
         reqBtn.style.lineHeight = '1';
+        reqBtn.style.cursor = 'pointer';
         reqBtn.style.display = 'inline-flex';
         reqBtn.style.alignItems = 'center';
         reqBtn.style.justifyContent = 'center';
-        reqBtn.style.cursor = 'pointer';
+        reqBtn.style.verticalAlign = 'middle';
         reqBtn.onclick = (e) => {
           e.preventDefault();
           openRequestChangeModal(p);
@@ -2427,16 +2461,22 @@ async function loadLockouts() {
   }
   if (btn) btn.style.display = 'inline-block';
   try {
-    const res = await fetch('api/admin_lockouts.php?_=' + Date.now(), { cache: 'no-store' });
-    const data = await res.json();
-    if (data.success) {
-      const lockouts = data.lockouts || [];
-      const totalLockouts = lockouts.length;
-      
-      if (lc) {
-        lc.textContent = totalLockouts;
-        lc.style.display = totalLockouts > 0 ? 'inline-block' : 'none';
-      }
+    const [lockoutRes, requestRes] = await Promise.all([
+      fetch('api/admin_lockouts.php?_=' + Date.now(), { cache: 'no-store' }),
+      fetch('api/admin_change_requests.php?_=' + Date.now(), { cache: 'no-store' })
+    ]);
+    const [lockoutData, requestData] = await Promise.all([
+      lockoutRes.json(),
+      requestRes.json()
+    ]);
+    
+    let totalLockouts = 0;
+    let totalPendingRequests = 0;
+    
+    // 1. Render Lockouts
+    if (lockoutData.success) {
+      const lockouts = lockoutData.lockouts || [];
+      totalLockouts = lockouts.length;
       
       const section = document.getElementById('lockoutManagerSection');
       const placeholder = document.getElementById('noLockoutsPlaceholder');
@@ -2444,7 +2484,6 @@ async function loadLockouts() {
       
       if (totalLockouts > 0) {
         tbody.innerHTML = '';
-        
         lockouts.forEach(l => {
           const tr = document.createElement('tr');
           
@@ -2471,6 +2510,7 @@ async function loadLockouts() {
           tdTime.style.fontSize = '0.75rem';
           tdTime.textContent = l.last_attempt || '—';
           tr.appendChild(tdTime);
+          
           const tdAction = document.createElement('td');
           tdAction.style.padding = '10px 10px';
           tdAction.style.textAlign = 'right';
@@ -2483,7 +2523,6 @@ async function loadLockouts() {
           
           tbody.appendChild(tr);
         });
-        
         if (section) section.style.display = 'block';
         if (placeholder) placeholder.style.display = 'none';
       } else {
@@ -2491,8 +2530,147 @@ async function loadLockouts() {
         if (placeholder) placeholder.style.display = 'block';
       }
     }
+    
+    // 2. Render Change Requests
+    if (requestData.success) {
+      const requests = requestData.requests || [];
+      const totalRequests = requests.length;
+      totalPendingRequests = requests.filter(r => r.status === 'Pending').length;
+      
+      const reqSection = document.getElementById('changeRequestManagerSection');
+      const reqPlaceholder = document.getElementById('noChangeRequestsPlaceholder');
+      const reqTbody = document.getElementById('changeRequestTableBody');
+      
+      if (totalRequests > 0) {
+        reqTbody.innerHTML = '';
+        requests.forEach(r => {
+          const tr = document.createElement('tr');
+          
+          const tdProj = document.createElement('td');
+          tdProj.style.padding = '10px 10px';
+          tdProj.style.fontWeight = '600';
+          tdProj.textContent = r.project || '—';
+          tr.appendChild(tdProj);
+          
+          const tdSup = document.createElement('td');
+          tdSup.style.padding = '10px 10px';
+          tdSup.textContent = r.supervisor || '—';
+          tr.appendChild(tdSup);
+          
+          const tdType = document.createElement('td');
+          tdType.style.padding = '10px 10px';
+          tdType.style.fontSize = '0.75rem';
+          tdType.textContent = r.request_type || '—';
+          tr.appendChild(tdType);
+          
+          const tdDetails = document.createElement('td');
+          tdDetails.style.padding = '10px 10px';
+          tdDetails.style.fontSize = '0.75rem';
+          tdDetails.style.maxWidth = '150px';
+          tdDetails.style.overflow = 'hidden';
+          tdDetails.style.textOverflow = 'ellipsis';
+          tdDetails.style.whiteSpace = 'nowrap';
+          tdDetails.textContent = r.details || '—';
+          tdDetails.title = r.details || '';
+          tr.appendChild(tdDetails);
+          
+          const tdStatus = document.createElement('td');
+          tdStatus.style.padding = '10px 10px';
+          tdStatus.style.textAlign = 'center';
+          
+          const statusSpan = document.createElement('span');
+          statusSpan.style.padding = '2px 6px';
+          statusSpan.style.borderRadius = '10px';
+          statusSpan.style.fontSize = '0.7rem';
+          statusSpan.style.fontWeight = 'bold';
+          statusSpan.style.textTransform = 'uppercase';
+          
+          if (r.status === 'Pending') {
+            statusSpan.style.background = '#fef3c7';
+            statusSpan.style.color = '#92400e';
+            statusSpan.textContent = 'Pending';
+          } else if (r.status === 'Resolved') {
+            statusSpan.style.background = '#d1fae5';
+            statusSpan.style.color = '#065f46';
+            statusSpan.textContent = 'Resolved';
+          } else {
+            statusSpan.style.background = '#fee2e2';
+            statusSpan.style.color = '#991b1b';
+            statusSpan.textContent = 'Denied';
+          }
+          tdStatus.appendChild(statusSpan);
+          tr.appendChild(tdStatus);
+          
+          const tdActions = document.createElement('td');
+          tdActions.style.padding = '10px 10px';
+          tdActions.style.textAlign = 'right';
+          
+          if (r.status === 'Pending') {
+            const btnResolve = document.createElement('button');
+            btnResolve.className = 'btn btn-green btn-sm';
+            btnResolve.textContent = 'Resolve';
+            btnResolve.style.padding = '3px 8px';
+            btnResolve.style.fontSize = '0.72rem';
+            btnResolve.style.marginRight = '4px';
+            btnResolve.addEventListener('click', () => resolveChangeRequest(r.id, 'Resolved'));
+            
+            const btnDeny = document.createElement('button');
+            btnDeny.className = 'btn btn-danger btn-sm';
+            btnDeny.textContent = 'Deny';
+            btnDeny.style.padding = '3px 8px';
+            btnDeny.style.fontSize = '0.72rem';
+            btnDeny.addEventListener('click', () => resolveChangeRequest(r.id, 'Denied'));
+            
+            tdActions.appendChild(btnResolve);
+            tdActions.appendChild(btnDeny);
+          } else {
+            tdActions.textContent = '—';
+            tdActions.style.color = 'var(--ink2)';
+          }
+          tr.appendChild(tdActions);
+          
+          reqTbody.appendChild(tr);
+        });
+        if (reqSection) reqSection.style.display = 'block';
+        if (reqPlaceholder) reqPlaceholder.style.display = 'none';
+      } else {
+        if (reqSection) reqSection.style.display = 'none';
+        if (reqPlaceholder) reqPlaceholder.style.display = 'block';
+      }
+    }
+    
+    // Update Badge Count
+    const totalAlerts = totalLockouts + totalPendingRequests;
+    if (lc) {
+      lc.textContent = totalAlerts;
+      lc.style.display = totalAlerts > 0 ? 'inline-block' : 'none';
+    }
+    
   } catch (err) {
-    console.error('Failed to load lockouts:', err);
+    console.error('Failed to load settings data:', err);
+  }
+}
+
+async function resolveChangeRequest(id, status) {
+  const confirmed = await showConfirm(`Are you sure you want to mark this request as ${status === 'Resolved' ? 'Resolved' : 'Denied'}?`, `${status} Request`);
+  if (!confirmed) return;
+  
+  try {
+    const res = await fetch('api/admin_change_requests.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('success', `Request ${status}`, `Change request has been successfully marked as ${status.toLowerCase()}.`, null);
+      await loadLockouts();
+    } else {
+      await showAlert("Error: " + (d.message || "Unknown error"), "Action Error", "error");
+    }
+  } catch (err) {
+    console.error('Failed to update request:', err);
+    await showAlert('Network error while processing request.', 'Connection Error', 'error');
   }
 }
 

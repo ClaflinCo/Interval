@@ -57,6 +57,23 @@ $conn->begin_transaction();
 $success = true;
 $errorMsg = '';
 
+$requestId = bin2hex(random_bytes(16));
+$reqSql = "INSERT INTO project_change_requests (id, supervisor, project, request_type, details, status) VALUES (?, ?, ?, ?, ?, 'Pending')";
+$reqStmt = $conn->prepare($reqSql);
+if (!$reqStmt) {
+    $conn->rollback();
+    echo json_encode(["success" => false, "message" => "Prepare change request statement failed: " . $conn->error]);
+    exit;
+}
+$reqStmt->bind_param("sssss", $requestId, $username, $project, $requestType, $details);
+if (!$reqStmt->execute()) {
+    $reqStmt->close();
+    $conn->rollback();
+    echo json_encode(["success" => false, "message" => "Failed to save change request: " . $conn->error]);
+    exit;
+}
+$reqStmt->close();
+
 $notifSql = "INSERT INTO notifications (id, username, type, title, msg, month) VALUES (?, ?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($notifSql);
 if (!$stmt) {
