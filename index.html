@@ -2556,17 +2556,17 @@ async function loadLockouts() {
     
     // 2. Render Change Requests
     if (requestData.success) {
-      const requests = requestData.requests || [];
-      const totalRequests = requests.length;
-      totalPendingRequests = requests.filter(r => r.status === 'Pending').length;
+      const allRequests = requestData.requests || [];
+      totalPendingRequests = allRequests.filter(r => r.status === 'Pending').length;
+      const pendingRequests = allRequests.filter(r => r.status === 'Pending');
       
       const reqSection = document.getElementById('changeRequestManagerSection');
       const reqPlaceholder = document.getElementById('noChangeRequestsPlaceholder');
       const reqTbody = document.getElementById('changeRequestTableBody');
       
-      if (totalRequests > 0) {
+      if (pendingRequests.length > 0) {
         reqTbody.innerHTML = '';
-        requests.forEach(r => {
+        pendingRequests.forEach(r => {
           const tr = document.createElement('tr');
           
           const tdProj = document.createElement('td');
