@@ -94,6 +94,20 @@ $conn->query("
 ");
 log_sync("Checked project_change_requests table existence.<br>");
 
+// 2e. Ensure admin_reports table structure and constraints
+$conn->query("
+    CREATE TABLE IF NOT EXISTS admin_reports (
+        id VARCHAR(50) PRIMARY KEY,
+        username VARCHAR(100) NOT NULL,
+        details TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        resolved_by VARCHAR(100) DEFAULT NULL,
+        resolved_at TIMESTAMP NULL DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+");
+log_sync("Checked admin_reports table existence.<br>");
+
 // Ensure month column is VARCHAR(20)
 $r = $conn->query("SHOW COLUMNS FROM project_allotments LIKE 'month'");
 if ($r && $row = $r->fetch_assoc()) {

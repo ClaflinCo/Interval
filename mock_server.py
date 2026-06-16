@@ -63,6 +63,8 @@ MOCK_LOCKOUTS = [
     }
 ]
 
+MOCK_REPORTS = []
+
 class MockHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/api/check_session.php'):
@@ -86,6 +88,16 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
             response = {
                 "success": True,
                 "lockouts": MOCK_LOCKOUTS
+            }
+            self.wfile.write(json.dumps(response).encode())
+        elif self.path.startswith('/api/admin_reports.php'):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            response = {
+                "success": True,
+                "reports": MOCK_REPORTS
             }
             self.wfile.write(json.dumps(response).encode())
         else:
@@ -241,6 +253,28 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                             n["read"] = True
                             n["completed"] = True
             response = {"success": True}
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path.startswith('/api/submit_help_report.php'):
+            details = data.get('details', '')
+            report = {
+                "id": "mock_report_" + str(len(MOCK_REPORTS) + 1),
+                "username": "employee",
+                "details": details,
+                "status": "Pending",
+                "created_at": "2026-06-16 11:00:00"
+            }
+            MOCK_REPORTS.insert(0, report)
+            response = {"success": True, "message": "Report submitted successfully."}
+            self.wfile.write(json.dumps(response).encode())
+
+        elif self.path.startswith('/api/admin_reports.php'):
+            id_val = data.get('id')
+            status_val = data.get('status')
+            for r in MOCK_REPORTS:
+                if r['id'] == id_val:
+                    r['status'] = status_val
+            response = {"success": True, "message": "Report resolved successfully."}
             self.wfile.write(json.dumps(response).encode())
             
         else:

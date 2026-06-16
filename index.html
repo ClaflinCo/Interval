@@ -298,6 +298,13 @@ tbody td{padding:10px 13px;vertical-align:middle}
         </svg>
         <span class="bell-count" id="lockoutCount">0</span>
       </button>
+      <button id="helpBtn" class="bell-btn" style="display:none;" onclick="openHelpModal()" title="Help & Support">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </button>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
     </div>
   </header>
@@ -400,6 +407,35 @@ tbody td{padding:10px 13px;vertical-align:middle}
       <!-- Placeholder when no change requests -->
       <div id="noChangeRequestsPlaceholder" style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem;display:none;">
         No pending change requests.
+      </div>
+
+      <!-- Admin Reports Section -->
+      <div id="adminReportManagerSection" style="margin-top:25px; border-top:1.5px solid var(--border); padding-top:20px; display:none;">
+        <h3 style="font-size:0.9rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; font-weight:700;">
+          Admin Reports
+        </h3>
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:15px;">
+          The following help requests or reports have been submitted by users. You can mark them as Resolved.
+        </p>
+        <div class="table-wrap" style="border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+            <thead>
+              <tr style="background:#f8f9fa;">
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:22%;">User</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:25%;">Date/Time</th>
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:35%;">Details</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:18%;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminReportTableBody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Placeholder when no admin reports -->
+      <div id="noAdminReportsPlaceholder" style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem;display:none;">
+        No pending help reports.
       </div>
     </div>
   </aside>
@@ -725,6 +761,39 @@ tbody td{padding:10px 13px;vertical-align:middle}
   </div>
 </div>
 
+<!-- Help / Report Issue Modal -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal" id="helpModalContent" style="max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative;">
+    <button class="close-notif-btn" style="position: absolute; top: 15px; right: 15px; font-size: 1.5rem;" onclick="closeHelpModal()">✕</button>
+    
+    <!-- Form Content -->
+    <div id="helpFormContent">
+      <h2 style="color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 15px;">Help & Support</h2>
+      <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 15px;">
+        Request assistance from an administrator or report an issue. Please describe the details below.
+      </p>
+      <div class="fg" style="gap: 5px; display: flex; flex-direction: column;">
+        <label style="font-size: 0.75rem; font-weight: 600; color: var(--navy);">Description of Issue</label>
+        <textarea id="helpDetails" placeholder="Type the details of your report here..." style="width: 100%; min-height: 120px; padding: 10px; border: 1.5px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 0.85rem; resize: vertical; box-sizing: border-box;" required></textarea>
+      </div>
+      <div class="modal-actions" style="border-top: 1.5px solid var(--border); padding-top: 15px; margin-top: 15px; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-outline" onclick="closeHelpModal()">Cancel</button>
+        <button class="btn btn-navy" onclick="submitHelpReport()">Submit Report</button>
+      </div>
+    </div>
+
+    <!-- Success Content -->
+    <div id="helpSuccessContent" style="display: none; padding: 10px 0;">
+      <span class="modal-success-icon">✓</span>
+      <h2 class="modal-success-title">Report Submitted</h2>
+      <p class="modal-success-text">An admin will look into the matter as soon as possible.</p>
+      <div class="modal-actions" style="justify-content: center; margin-top: 24px;">
+        <button class="btn btn-navy" onclick="closeHelpModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Request Change Modal -->
 <div class="modal-overlay" id="requestChangeModal">
@@ -986,6 +1055,7 @@ async function doLogin(){
       document.getElementById('toggleAddBtn').style.display = isViewer ? 'none' : '';
       const isAdmin = currentUser.role === 'Admin';
       document.getElementById('adminSettingsBtn').style.display = isAdmin ? 'inline-block' : 'none';
+      document.getElementById('helpBtn').style.display = isAdmin ? 'none' : 'inline-block';
       await init();
     } else {
       err.textContent = data.message || 'Invalid credentials';
@@ -1010,6 +1080,8 @@ async function doLogout(){
   }
   const btn = document.getElementById('adminSettingsBtn');
   if (btn) btn.style.display = 'none';
+  const helpBtn = document.getElementById('helpBtn');
+  if (helpBtn) helpBtn.style.display = 'none';
 }
 
 async function checkSession() {
@@ -1027,6 +1099,7 @@ async function checkSession() {
       document.getElementById('toggleAddBtn').style.display = isViewer ? 'none' : '';
       const isAdmin = currentUser.role === 'Admin';
       document.getElementById('adminSettingsBtn').style.display = isAdmin ? 'inline-block' : 'none';
+      document.getElementById('helpBtn').style.display = isAdmin ? 'none' : 'inline-block';
       await init();
     }
   } catch (e) {
@@ -2752,17 +2825,20 @@ async function loadLockouts() {
   }
   if (btn) btn.style.display = 'inline-block';
   try {
-    const [lockoutRes, requestRes] = await Promise.all([
+    const [lockoutRes, requestRes, reportRes] = await Promise.all([
       fetch('api/admin_lockouts.php?_=' + Date.now(), { cache: 'no-store' }),
-      fetch('api/admin_change_requests.php?_=' + Date.now(), { cache: 'no-store' })
+      fetch('api/admin_change_requests.php?_=' + Date.now(), { cache: 'no-store' }),
+      fetch('api/admin_reports.php?_=' + Date.now(), { cache: 'no-store' })
     ]);
-    const [lockoutData, requestData] = await Promise.all([
+    const [lockoutData, requestData, reportData] = await Promise.all([
       lockoutRes.json(),
-      requestRes.json()
+      requestRes.json(),
+      reportRes.json()
     ]);
     
     let totalLockouts = 0;
     let totalPendingRequests = 0;
+    let totalPendingReports = 0;
     
     // 1. Render Lockouts
     if (lockoutData.success) {
@@ -2915,8 +2991,83 @@ async function loadLockouts() {
       }
     }
     
+    // 3. Render Admin Reports
+    if (reportData.success) {
+      const allReports = reportData.reports || [];
+      totalPendingReports = allReports.filter(r => r.status === 'Pending').length;
+      const pendingReports = allReports.filter(r => r.status === 'Pending');
+      
+      const repSection = document.getElementById('adminReportManagerSection');
+      const repPlaceholder = document.getElementById('noAdminReportsPlaceholder');
+      const repTbody = document.getElementById('adminReportTableBody');
+      
+      if (pendingReports.length > 0) {
+        repTbody.innerHTML = '';
+        pendingReports.forEach(r => {
+          const tr = document.createElement('tr');
+          
+          const tdUser = document.createElement('td');
+          tdUser.style.padding = '10px 6px';
+          tdUser.style.textAlign = 'left';
+          tdUser.style.fontWeight = '600';
+          tdUser.style.whiteSpace = 'normal';
+          tdUser.style.overflowWrap = 'break-word';
+          tdUser.style.wordBreak = 'normal';
+          tdUser.textContent = r.username || '—';
+          tr.appendChild(tdUser);
+          
+          const tdTime = document.createElement('td');
+          tdTime.style.padding = '10px 6px';
+          tdTime.style.textAlign = 'center';
+          tdTime.style.fontSize = '0.75rem';
+          tdTime.style.whiteSpace = 'normal';
+          tdTime.textContent = r.created_at || '—';
+          tr.appendChild(tdTime);
+          
+          const tdDetails = document.createElement('td');
+          tdDetails.style.padding = '10px 6px';
+          tdDetails.style.textAlign = 'left';
+          tdDetails.style.fontSize = '0.75rem';
+          tdDetails.style.whiteSpace = 'normal';
+          tdDetails.style.overflowWrap = 'break-word';
+          tdDetails.style.wordBreak = 'normal';
+          tdDetails.textContent = r.details || '—';
+          tdDetails.title = r.details || '';
+          tr.appendChild(tdDetails);
+          
+          const tdActions = document.createElement('td');
+          tdActions.style.padding = '10px 6px';
+          tdActions.style.textAlign = 'center';
+          tdActions.style.whiteSpace = 'nowrap';
+          
+          if (r.status === 'Pending') {
+            const btnResolve = document.createElement('button');
+            btnResolve.className = 'btn btn-navy btn-sm';
+            btnResolve.textContent = 'Resolve';
+            btnResolve.style.padding = '3px 8px';
+            btnResolve.style.fontSize = '0.72rem';
+            btnResolve.addEventListener('click', () => resolveHelpReport(r.id));
+            
+            tdActions.appendChild(btnResolve);
+          } else {
+            tdActions.textContent = r.status || '—';
+            tdActions.style.color = 'var(--ink2)';
+            tdActions.style.fontSize = '0.75rem';
+          }
+          tr.appendChild(tdActions);
+          
+          repTbody.appendChild(tr);
+        });
+        if (repSection) repSection.style.display = 'block';
+        if (repPlaceholder) repPlaceholder.style.display = 'none';
+      } else {
+        if (repSection) repSection.style.display = 'none';
+        if (repPlaceholder) repPlaceholder.style.display = 'block';
+      }
+    }
+
     // Update Badge Count
-    const totalAlerts = totalLockouts + totalPendingRequests;
+    const totalAlerts = totalLockouts + totalPendingRequests + totalPendingReports;
     if (lc) {
       lc.textContent = totalAlerts;
       lc.style.display = totalAlerts > 0 ? 'inline-block' : 'none';
@@ -2946,6 +3097,65 @@ async function resolveChangeRequest(id, status) {
     }
   } catch (err) {
     console.error('Failed to update request:', err);
+    await showAlert('Network error while processing request.', 'Connection Error', 'error');
+  }
+}
+
+function openHelpModal() {
+  document.getElementById('helpDetails').value = '';
+  document.getElementById('helpFormContent').style.display = 'block';
+  document.getElementById('helpSuccessContent').style.display = 'none';
+  document.getElementById('helpModal').classList.add('open');
+}
+
+function closeHelpModal() {
+  document.getElementById('helpModal').classList.remove('open');
+}
+
+async function submitHelpReport() {
+  const details = document.getElementById('helpDetails').value.trim();
+  if (!details) {
+    await showAlert('Please explain what you need to report.', 'Required Field', 'warning');
+    return;
+  }
+  
+  try {
+    const res = await fetch('api/submit_help_report.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ details })
+    });
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById('helpFormContent').style.display = 'none';
+      document.getElementById('helpSuccessContent').style.display = 'block';
+    } else {
+      await showAlert("Error: " + (d.message || "Unknown error"), "Submission Error", "error");
+    }
+  } catch(e) {
+    await showAlert("Network error while submitting help report.", "Connection Error", "error");
+  }
+}
+
+async function resolveHelpReport(id) {
+  const confirmed = await showConfirm(`Are you sure you want to mark this report as Resolved?`, `Resolve Report`);
+  if (!confirmed) return;
+  
+  try {
+    const res = await fetch('api/admin_reports.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status: 'Resolved' })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('success', `Report Resolved`, `Help report has been successfully marked as resolved.`, null);
+      await loadLockouts();
+    } else {
+      await showAlert("Error: " + (d.message || "Unknown error"), "Action Error", "error");
+    }
+  } catch (err) {
+    console.error('Failed to update report:', err);
     await showAlert('Network error while processing request.', 'Connection Error', 'error');
   }
 }
