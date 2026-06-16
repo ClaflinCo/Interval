@@ -50,6 +50,7 @@ if ($projRes) {
                     "assigned" => $row['assigned'] ?? '',
                     "customer" => $row['customer'] ?? '',
                     "duration" => (int)($row['duration'] ?? 1),
+                    "allotment" => (float)($row['allotment'] ?? 0.00),
                     "created_by" => $row['created_by'] ?? '',
                     "services" => $row['services'] ?? ''
                 ];

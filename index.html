@@ -411,7 +411,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
       <!-- Stats -->
       <div class="stats-row">
         <div class="stat-card">
-          <div class="stat-label">Projects <button class="edit-allotment-btn" id="editAllotBtn" onclick="toggleAllotmentEdit()" title="Edit" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0;"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button></div>
+          <div class="stat-label">Projects <button class="btn btn-outline btn-sm" id="editAllotBtn" onclick="onEditProjectsClick()" title="Edit Projects" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 0.72rem; font-weight: 600; text-transform: none; height: auto;"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Edit</button></div>
           <div id="allotmentDisplay">
             <div class="stat-value" id="statAllotment">0</div>
             <div style="font-size:.72rem;color:var(--ink2);margin-top:4px">hrs / month</div>
@@ -639,6 +639,88 @@ tbody td{padding:10px 13px;vertical-align:middle}
     <div class="modal-actions" style="border-top: 1.5px solid var(--border); padding-top: 15px; margin-top: 15px; justify-content: flex-end; gap: 10px;">
       <button class="btn btn-outline" onclick="closeCreateProjectModal()">Cancel</button>
       <button class="btn btn-navy" onclick="submitCreateProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Project Manager Modal -->
+<div class="modal-overlay" id="adminProjectManagerModal">
+  <div class="modal" style="max-width: 850px; width: 95%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; position: relative; padding: 25px 30px;">
+    <button class="close-notif-btn" style="position: absolute; top: 15px; right: 15px; font-size: 1.5rem;" onclick="closeAdminProjectManagerModal()">✕</button>
+    <h2 style="color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 5px;">Project Manager</h2>
+    
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <!-- Left Panel: List & Search -->
+      <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="fg" style="gap: 2px;">
+          <input type="text" id="apmSearch" placeholder="Search projects by name or user..." oninput="filterAdminProjects()" style="width:100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-md); font-size: 0.85rem;">
+        </div>
+        <div id="apmProjectsList" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+          <!-- Project Cards dynamic content -->
+        </div>
+      </div>
+      
+      <!-- Right Panel: Edit Details Form -->
+      <div id="apmEditPanel" style="flex: 1.2; min-width: 350px; border: 1.5px solid var(--border); border-radius: 8px; padding: 18px; background: #fafafa;">
+        <div id="apmEditPlaceholder" style="height: 100%; min-height: 250px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.85rem; border: 1.5px dashed var(--border); border-radius: 6px; padding: 20px; text-align: center;">
+          Select a project card from the list to edit its details.
+        </div>
+        
+        <div id="apmEditForm" style="display: none; flex-direction: column; gap: 12px;">
+          <h3 style="font-size: 0.9rem; color: var(--navy); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; font-weight: 700; border-bottom: 1.5px solid var(--border); padding-bottom: 5px;">Edit Project Details</h3>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="fg" style="gap: 2px;">
+              <label style="font-size: 0.65rem;">Project Name</label>
+              <input type="text" id="apmProjName" style="padding: 7px 10px; font-size: 0.8rem;" required>
+            </div>
+            <div class="fg" style="gap: 2px;">
+              <label style="font-size: 0.65rem;">Customer Name</label>
+              <input type="text" id="apmCustomer" style="padding: 7px 10px; font-size: 0.8rem;" required>
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="fg" style="gap: 2px;">
+              <label style="font-size: 0.65rem;">Monthly Allotment (Hours)</label>
+              <input type="number" id="apmAllotment" min="0" step="0.5" style="padding: 7px 10px; font-size: 0.8rem;" required>
+            </div>
+            <div class="fg" style="gap: 2px;">
+              <label style="font-size: 0.65rem;">Assigned Users</label>
+              <input type="text" id="apmAssigned" style="padding: 7px 10px; font-size: 0.8rem;" placeholder="user1, user2..." required>
+            </div>
+          </div>
+          
+          <div class="fg" style="gap: 2px;">
+            <label style="font-size: 0.65rem;">Offered Services</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+                <input type="checkbox" name="apmServices" value="Placeholder 1" style="cursor: pointer;"> Placeholder 1
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+                <input type="checkbox" name="apmServices" value="Placeholder 2" style="cursor: pointer;"> Placeholder 2
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+                <input type="checkbox" name="apmServices" value="Placeholder 3" style="cursor: pointer;"> Placeholder 3
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+                <input type="checkbox" name="apmServices" value="Placeholder 4" style="cursor: pointer;"> Placeholder 4
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+                <input type="checkbox" name="apmServices" value="Placeholder 5" style="cursor: pointer;"> Placeholder 5
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+                <input type="checkbox" name="apmServices" value="Placeholder 6" style="cursor: pointer;"> Placeholder 6
+              </label>
+            </div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1.5px solid var(--border); padding-top: 15px; gap: 10px;">
+            <button class="btn btn-danger" onclick="deleteAdminProject()" style="padding: 6px 14px; font-size: 0.75rem;">Delete Project</button>
+            <button class="btn btn-navy" onclick="saveAdminProject()" style="padding: 6px 14px; font-size: 0.75rem; min-width: 100px;">Save Changes</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2343,6 +2425,188 @@ table.data td.notes{font-size:7.5pt}
   pushNotif('success','PDF Exported','PDF print dialog opened with logo and full formatting.',null);
 }
 
+let selectedAdminProject = '';
+
+function onEditProjectsClick() {
+  if (currentUser && currentUser.role === 'Admin') {
+    openAdminProjectManagerModal();
+  } else if (currentUser && currentUser.role === 'Supervisor') {
+    toggleAllotmentEdit();
+  }
+}
+
+function openAdminProjectManagerModal() {
+  selectedAdminProject = '';
+  document.getElementById('apmSearch').value = '';
+  
+  // Hide form, show placeholder
+  document.getElementById('apmEditForm').style.display = 'none';
+  document.getElementById('apmEditPlaceholder').style.display = 'flex';
+  
+  document.getElementById('adminProjectManagerModal').classList.add('open');
+  renderAdminProjectCards();
+}
+
+function closeAdminProjectManagerModal() {
+  document.getElementById('adminProjectManagerModal').classList.remove('open');
+}
+
+function renderAdminProjectCards() {
+  const list = document.getElementById('apmProjectsList');
+  list.innerHTML = '';
+  const searchVal = document.getElementById('apmSearch').value.toLowerCase().trim();
+  
+  PROJECTS.forEach(p => {
+    const meta = PROJECTS_META[p] || {};
+    const cust = meta.customer || '';
+    const createdBy = meta.created_by || 'System';
+    const assigned = meta.assigned || '';
+    
+    // Search filter by project name or assigned user
+    const matchesName = p.toLowerCase().includes(searchVal);
+    const matchesUser = assigned.toLowerCase().includes(searchVal);
+    
+    if (searchVal && !matchesName && !matchesUser) {
+      return;
+    }
+    
+    const card = document.createElement('div');
+    card.style.background = '#f8f9fa';
+    card.style.border = (selectedAdminProject === p) ? '2px solid var(--navy)' : '1.5px solid var(--border)';
+    card.style.borderRadius = 'var(--radius-md)';
+    card.style.padding = '12px';
+    card.style.cursor = 'pointer';
+    card.style.transition = 'all 0.15s ease';
+    
+    if (selectedAdminProject === p) {
+      card.style.boxShadow = '0 2px 8px rgba(5,41,75,0.15)';
+    }
+    
+    card.onmouseover = () => {
+      if (selectedAdminProject !== p) {
+        card.style.background = 'var(--navy-light)';
+        card.style.borderColor = 'var(--navy)';
+      }
+    };
+    card.onmouseout = () => {
+      if (selectedAdminProject !== p) {
+        card.style.background = '#f8f9fa';
+        card.style.borderColor = 'var(--border)';
+      }
+    };
+    
+    card.onclick = () => selectAdminProject(p);
+    
+    card.innerHTML = `
+      <div style="font-weight:700; color:var(--navy); font-size:0.85rem; margin-bottom: 4px; word-break: break-all;">${p}</div>
+      <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom: 2px;">Customer: ${cust || '—'}</div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">Created by: ${createdBy}</div>
+    `;
+    
+    list.appendChild(card);
+  });
+}
+
+function filterAdminProjects() {
+  renderAdminProjectCards();
+}
+
+function selectAdminProject(p) {
+  selectedAdminProject = p;
+  renderAdminProjectCards();
+  
+  const meta = PROJECTS_META[p] || {};
+  document.getElementById('apmProjName').value = p;
+  document.getElementById('apmCustomer').value = meta.customer || '';
+  document.getElementById('apmAllotment').value = meta.allotment !== undefined ? meta.allotment : 30;
+  document.getElementById('apmAssigned').value = meta.assigned || '';
+  
+  const services = meta.services || '';
+  const servicesList = services.split(',').map(s => s.trim());
+  document.querySelectorAll('input[name="apmServices"]').forEach(cb => {
+    cb.checked = servicesList.includes(cb.value);
+  });
+  
+  document.getElementById('apmEditPlaceholder').style.display = 'none';
+  document.getElementById('apmEditForm').style.display = 'flex';
+}
+
+async function saveAdminProject() {
+  if (!selectedAdminProject) return;
+  const name = document.getElementById('apmProjName').value.trim();
+  const customer = document.getElementById('apmCustomer').value.trim();
+  const allotment = parseFloat(document.getElementById('apmAllotment').value);
+  const assigned = document.getElementById('apmAssigned').value.trim();
+  
+  const servicesChecked = [];
+  document.querySelectorAll('input[name="apmServices"]:checked').forEach(cb => {
+    servicesChecked.push(cb.value);
+  });
+  
+  if (!name || !customer || isNaN(allotment) || !assigned) {
+    await showAlert("Please fill out all required fields.", "Validation Error", "error");
+    return;
+  }
+  
+  try {
+    const res = await fetch('api/admin_update_project.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update',
+        originalName: selectedAdminProject,
+        name: name,
+        customer: customer,
+        allotment: allotment,
+        assigned: assigned,
+        services: servicesChecked
+      })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('success', 'Project Updated', `"${name}" details updated successfully.`, null);
+      selectedAdminProject = name;
+      await init();
+      renderAdminProjectCards();
+      selectAdminProject(name);
+    } else {
+      await showAlert("Error: " + (d.message || "Unknown error"), "Project Update Error", "error");
+    }
+  } catch (e) {
+    await showAlert("Network error while updating project.", "Connection Error", "error");
+  }
+}
+
+async function deleteAdminProject() {
+  if (!selectedAdminProject) return;
+  const confirmed = await showConfirm(`Are you sure you want to permanently delete "${selectedAdminProject}"? This will delete all of its allotments and logged time entries.`, "Delete Project");
+  if (!confirmed) return;
+  
+  try {
+    const res = await fetch('api/admin_update_project.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'delete',
+        originalName: selectedAdminProject
+      })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('success', 'Project Deleted', `"${selectedAdminProject}" has been deleted.`, null);
+      selectedAdminProject = '';
+      document.getElementById('apmEditForm').style.display = 'none';
+      document.getElementById('apmEditPlaceholder').style.display = 'flex';
+      await init();
+      renderAdminProjectCards();
+    } else {
+      await showAlert("Error: " + (d.message || "Unknown error"), "Project Deletion Error", "error");
+    }
+  } catch (e) {
+    await showAlert("Network error while deleting project.", "Connection Error", "error");
+  }
+}
+
 function openCreateProjectModal(){
   const modal = document.getElementById('createProjectModal');
   modal.classList.add('open');
@@ -2718,7 +2982,8 @@ async function resetLockout(type, target) {
   }
 }
 
-checkSession();
+// Force log out on fresh page refresh so user must log back in
+doLogout();
 
 </script>
 </body>
