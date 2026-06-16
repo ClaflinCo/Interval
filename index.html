@@ -560,9 +560,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
 
 <!-- Allotment Edit Modal -->
 <div class="modal-overlay" id="allotmentEditModal">
-  <div class="modal" style="max-width: 500px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; position: relative;">
+  <div class="modal" id="allotmentEditModalContent" style="max-width: 500px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; position: relative;">
     <button class="close-notif-btn" style="position: absolute; top: 15px; right: 15px; font-size: 1.5rem;" onclick="toggleAllotmentEdit()">✕</button>
-    <h2 style="color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 5px;">Project Manager</h2>
+    <h2 id="allotmentEditModalHeader" style="color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 5px; cursor: move; user-select: none;">Project Manager</h2>
 
     <!-- Edit Monthly Allotments Section -->
     <div>
@@ -645,9 +645,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
 
 <!-- Admin Project Manager Modal -->
 <div class="modal-overlay" id="adminProjectManagerModal">
-  <div class="modal" style="max-width: 850px; width: 95%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; position: relative; padding: 25px 30px;">
+  <div class="modal" id="adminProjectManagerModalContent" style="max-width: 850px; width: 95%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; position: relative; padding: 25px 30px;">
     <button class="close-notif-btn" style="position: absolute; top: 15px; right: 15px; font-size: 1.5rem;" onclick="closeAdminProjectManagerModal()">✕</button>
-    <h2 style="color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 5px;">Project Manager</h2>
+    <h2 id="adminProjectManagerModalHeader" style="color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 5px; cursor: move; user-select: none;">Project Manager</h2>
     
     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
       <!-- Left Panel: List & Search -->
@@ -1733,6 +1733,8 @@ function toggleAllotmentEdit(){
   const show = !modal.classList.contains('open');
   if(show){
     modal.classList.add('open');
+    const content = document.getElementById('allotmentEditModalContent');
+    if (content && typeof content.resetDrag === 'function') content.resetDrag();
     document.getElementById('allotmentModalMonthLabel').textContent = currentMonth;
     
     const container = document.getElementById('allotmentInputsContainer');
@@ -2444,6 +2446,8 @@ function openAdminProjectManagerModal() {
   document.getElementById('apmEditPlaceholder').style.display = 'flex';
   
   document.getElementById('adminProjectManagerModal').classList.add('open');
+  const content = document.getElementById('adminProjectManagerModalContent');
+  if (content && typeof content.resetDrag === 'function') content.resetDrag();
   renderAdminProjectCards();
 }
 
@@ -2988,6 +2992,74 @@ async function resetLockout(type, target) {
     await showAlert('Connection error.', 'Error', 'error');
   }
 }
+
+// Make Project Manager modals draggable
+function initDraggableModals() {
+  const allotmentContent = document.getElementById('allotmentEditModalContent');
+  const allotmentHeader = document.getElementById('allotmentEditModalHeader');
+  if (allotmentContent && allotmentHeader) {
+    makeElementDraggable(allotmentContent, allotmentHeader);
+  }
+
+  const adminContent = document.getElementById('adminProjectManagerModalContent');
+  const adminHeader = document.getElementById('adminProjectManagerModalHeader');
+  if (adminContent && adminHeader) {
+    makeElementDraggable(adminContent, adminHeader);
+  }
+}
+
+function makeElementDraggable(elmnt, dragHandle) {
+  let offsetX = 0, offsetY = 0;
+  let startX = 0, startY = 0;
+
+  dragHandle.addEventListener('pointerdown', dragMouseDown);
+
+  function dragMouseDown(e) {
+    if (e.button !== 0) return;
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    e.preventDefault();
+    dragHandle.setPointerCapture(e.pointerId);
+
+    startX = e.clientX;
+    startY = e.clientY;
+
+    dragHandle.addEventListener('pointermove', elementDrag);
+    dragHandle.addEventListener('pointerup', closeDragElement);
+    dragHandle.addEventListener('pointercancel', closeDragElement);
+  }
+
+  function elementDrag(e) {
+    e.preventDefault();
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    startX = e.clientX;
+    startY = e.clientY;
+
+    offsetX += dx;
+    offsetY += dy;
+
+    elmnt.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+  }
+
+  function closeDragElement(e) {
+    try {
+      dragHandle.releasePointerCapture(e.pointerId);
+    } catch (err) {}
+    dragHandle.removeEventListener('pointermove', elementDrag);
+    dragHandle.removeEventListener('pointerup', closeDragElement);
+    dragHandle.removeEventListener('pointercancel', closeDragElement);
+  }
+
+  elmnt.resetDrag = function() {
+    offsetX = 0;
+    offsetY = 0;
+    elmnt.style.transform = 'none';
+  };
+}
+
+initDraggableModals();
 
 // Force log out on fresh page refresh so user must log back in
 doLogout();
