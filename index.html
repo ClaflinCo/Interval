@@ -1846,13 +1846,13 @@ function toggleAllotmentEdit(){
         reqBtn.textContent = '+';
         reqBtn.title = 'Request project change from admin';
         reqBtn.style.background = 'none';
-        reqBtn.style.border = '2px solid var(--gold)';
+        reqBtn.style.border = '1px solid var(--navy)';
         reqBtn.style.borderRadius = '50%';
         reqBtn.style.width = '20px';
         reqBtn.style.height = '20px';
         reqBtn.style.padding = '0';
         reqBtn.style.margin = '0 0 0 8px';
-        reqBtn.style.color = 'var(--gold)';
+        reqBtn.style.color = 'var(--navy)';
         reqBtn.style.fontSize = '1.1rem';
         reqBtn.style.fontWeight = '800';
         reqBtn.style.lineHeight = '1';
@@ -1861,6 +1861,15 @@ function toggleAllotmentEdit(){
         reqBtn.style.alignItems = 'center';
         reqBtn.style.justifyContent = 'center';
         reqBtn.style.verticalAlign = 'middle';
+        reqBtn.style.transition = 'all var(--transition-fast)';
+        reqBtn.onmouseover = () => {
+          reqBtn.style.background = 'var(--navy)';
+          reqBtn.style.color = '#ffffff';
+        };
+        reqBtn.onmouseout = () => {
+          reqBtn.style.background = 'none';
+          reqBtn.style.color = 'var(--navy)';
+        };
         reqBtn.onclick = (e) => {
           e.preventDefault();
           openRequestChangeModal(p);
