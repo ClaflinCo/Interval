@@ -2648,12 +2648,28 @@ async function saveAdminProject() {
         customer: customer,
         allotment: allotment,
         assigned: assigned,
-        services: servicesChecked
+        services: servicesChecked,
+        month: currentMonth
       })
     });
     const d = await res.json();
     if (d.success) {
       pushNotif('success', 'Project Updated', `"${name}" details updated successfully.`, null);
+      
+      // Update local state immediately for the active month
+      if (!state[currentMonth]) {
+        state[currentMonth] = { allotments: {}, entries: [] };
+      }
+      if (!state[currentMonth].allotments) {
+        state[currentMonth].allotments = {};
+      }
+      state[currentMonth].allotments[name] = allotment;
+      
+      // Clean up old name if renamed
+      if (selectedAdminProject !== name && state[currentMonth].allotments[selectedAdminProject] !== undefined) {
+        delete state[currentMonth].allotments[selectedAdminProject];
+      }
+
       selectedAdminProject = name;
       await init();
       renderAdminProjectCards();

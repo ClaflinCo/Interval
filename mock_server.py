@@ -223,6 +223,74 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                     MOCK_DATA['allotments'][month][p] = float(val)
             response = {"success": True, "message": "Allotments saved successfully."}
             self.wfile.write(json.dumps(response).encode())
+
+        elif self.path.startswith('/api/admin_update_project.php'):
+            action = data.get('action')
+            originalName = data.get('originalName', '')
+            if action == 'delete':
+                if originalName in MOCK_DATA['projects']:
+                    MOCK_DATA['projects'].remove(originalName)
+                if originalName in MOCK_DATA['projectsMeta']:
+                    del MOCK_DATA['projectsMeta'][originalName]
+                for m in MOCK_DATA['allotments']:
+                    if originalName in MOCK_DATA['allotments'][m]:
+                        del MOCK_DATA['allotments'][m][originalName]
+                MOCK_DATA['entries'] = [e for e in MOCK_DATA['entries'] if e.get('project') != originalName]
+                response = {"success": True, "message": "Project deleted successfully."}
+            elif action == 'update':
+                name = data.get('name', '').strip()
+                customer = data.get('customer', '').strip()
+                allotment = float(data.get('allotment', 0.00))
+                assigned = data.get('assigned', '').strip()
+                month = data.get('month', '').strip()
+                
+                servicesRaw = data.get('services', '')
+                if isinstance(servicesRaw, list):
+                    services = ', '.join(servicesRaw)
+                else:
+                    services = str(servicesRaw)
+                
+                if originalName in MOCK_DATA['projectsMeta']:
+                    meta = MOCK_DATA['projectsMeta'][originalName]
+                    del MOCK_DATA['projectsMeta'][originalName]
+                else:
+                    meta = {}
+                
+                meta['customer'] = customer
+                meta['assigned'] = assigned
+                meta['services'] = services
+                MOCK_DATA['projectsMeta'][name] = meta
+                
+                if originalName != name:
+                    if originalName in MOCK_DATA['projects']:
+                        idx = MOCK_DATA['projects'].index(originalName)
+                        MOCK_DATA['projects'][idx] = name
+                    else:
+                        MOCK_DATA['projects'].append(name)
+                        
+                    for m in MOCK_DATA['allotments']:
+                        if originalName in MOCK_DATA['allotments'][m]:
+                            val = MOCK_DATA['allotments'][m][originalName]
+                            del MOCK_DATA['allotments'][m][originalName]
+                            MOCK_DATA['allotments'][m][name] = val
+                    
+                    for e in MOCK_DATA['entries']:
+                        if e.get('project') == originalName:
+                            e['project'] = name
+                
+                for m in MOCK_DATA['allotments']:
+                    if name in MOCK_DATA['allotments'][m]:
+                        MOCK_DATA['allotments'][m][name] = allotment
+                
+                if month:
+                    if month not in MOCK_DATA['allotments']:
+                        MOCK_DATA['allotments'][month] = {}
+                    MOCK_DATA['allotments'][month][name] = allotment
+                
+                response = {"success": True, "message": "Project updated successfully."}
+            else:
+                response = {"success": False, "message": "Invalid action"}
+            self.wfile.write(json.dumps(response).encode())
             
         elif self.path.startswith('/api/save_notification.php'):
             notif = {

@@ -79,6 +79,7 @@ try {
         $customer = trim($data['customer'] ?? '');
         $assigned = trim($data['assigned'] ?? '');
         $allotment = isset($data['allotment']) ? (float)$data['allotment'] : 0.00;
+        $month = trim($data['month'] ?? '');
         
         $servicesRaw = $data['services'] ?? '';
         if (is_array($servicesRaw)) {
@@ -137,6 +138,14 @@ try {
         $stmt->bind_param("ds", $allotment, $name);
         $stmt->execute();
         $stmt->close();
+
+        // Ensure the active month's allotment is updated/created
+        if (!empty($month)) {
+            $stmt = $conn->prepare("INSERT INTO project_allotments (month, project, allotment, updated_by) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allotment = VALUES(allotment), updated_by = VALUES(updated_by)");
+            $stmt->bind_param("ssds", $month, $name, $allotment, $username);
+            $stmt->execute();
+            $stmt->close();
+        }
 
         $conn->commit();
         echo json_encode(["success" => true, "message" => "Project updated successfully."]);
