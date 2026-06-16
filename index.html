@@ -385,10 +385,10 @@ tbody td{padding:10px 13px;vertical-align:middle}
             <thead>
               <tr style="background:#f8f9fa;">
                 <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:19%;">Project</th>
-                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:19%;">Supervisor</th>
-                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:16%;">Type</th>
-                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:19%;">Details</th>
-                <th style="padding:10px 6px; text-align:right; font-size:0.7rem; letter-spacing:0.03em; width:27%;">Actions</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:19%;">Supervisor</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:16%;">Type</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:19%;">Details</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:27%;">Actions</th>
               </tr>
             </thead>
             <tbody id="changeRequestTableBody">
@@ -2845,7 +2845,7 @@ async function loadLockouts() {
           
           const tdSup = document.createElement('td');
           tdSup.style.padding = '10px 6px';
-          tdSup.style.textAlign = 'left';
+          tdSup.style.textAlign = 'center';
           tdSup.style.whiteSpace = 'normal';
           tdSup.style.overflowWrap = 'break-word';
           tdSup.style.wordBreak = 'normal';
@@ -2854,7 +2854,7 @@ async function loadLockouts() {
           
           const tdType = document.createElement('td');
           tdType.style.padding = '10px 6px';
-          tdType.style.textAlign = 'left';
+          tdType.style.textAlign = 'center';
           tdType.style.fontSize = '0.75rem';
           tdType.style.whiteSpace = 'normal';
           tdType.textContent = r.request_type || '—';
@@ -2862,7 +2862,7 @@ async function loadLockouts() {
           
           const tdDetails = document.createElement('td');
           tdDetails.style.padding = '10px 6px';
-          tdDetails.style.textAlign = 'left';
+          tdDetails.style.textAlign = 'center';
           tdDetails.style.fontSize = '0.75rem';
           tdDetails.style.whiteSpace = 'normal';
           tdDetails.style.overflowWrap = 'break-word';
@@ -2873,7 +2873,7 @@ async function loadLockouts() {
           
           const tdActions = document.createElement('td');
           tdActions.style.padding = '10px 6px';
-          tdActions.style.textAlign = 'right';
+          tdActions.style.textAlign = 'center';
           tdActions.style.whiteSpace = 'nowrap';
           
           if (r.status === 'Pending') {
