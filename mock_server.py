@@ -317,6 +317,8 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                     if n["id"] == notif_id:
                         if action == "read":
                             n["read"] = True
+                        elif action == "unread":
+                            n["read"] = False
                         elif action == "complete":
                             n["read"] = True
                             n["completed"] = True

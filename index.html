@@ -265,6 +265,22 @@ tbody td{padding:10px 13px;vertical-align:middle}
 .warn, span.warn, td.warn, .td-rem.warn {
   color: var(--amber) !important;
 }
+/* Login loading indicator styles */
+.login-loading-container {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  width: 100%;
+}
+.login-spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid var(--border-light);
+  border-top: 4px solid var(--navy);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
 </style>
 </head>
 <body>
@@ -281,6 +297,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
     <div class="fg-login"><label>Password</label><input type="password" id="loginPass" placeholder="Enter your password" maxlength="45" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div class="login-err" id="loginErr">Invalid username or password. Please try again.</div>
     <button class="btn-login" onclick="doLogin()">Sign In</button>
+    <div id="loginSpinnerContainer" class="login-loading-container">
+      <div class="login-spinner"></div>
+    </div>
   </div>
 </div>
 
@@ -329,6 +348,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
         <option value="desc">Newest First</option>
         <option value="asc">Oldest First</option>
       </select>
+    </div>
+    <div id="filterBarCreateProjectContainer" class="filter-group" style="margin-left: auto; display: none;">
+      <button class="btn btn-navy" id="monthNavCreateProjectBtn" onclick="openCreateProjectModal()" style="font-size: 0.85rem; padding: 7px 16px; border-radius: 6px; height: 36px; display: inline-flex; align-items: center; justify-content: center;">Create Project</button>
     </div>
   </div>
 
@@ -924,7 +946,8 @@ function getESTDate() {
 }
 
 let currentMonth=MONTHS[getESTDate().getMonth()],currentUser=null,state={},notifications=[],pending=[],
-    deleteTarget=null,editingId=null,isHoursOverride=false,notifPanelOpen=false,adminSettingsPanelOpen=false,exportType='xlsx';
+    deleteTarget=null,editingId=null,isHoursOverride=false,notifPanelOpen=false,adminSettingsPanelOpen=false,exportType='xlsx',
+    expandedNotifId=null;
 
 // ═══════════════════════════════════════════════════
 //  HELPERS
@@ -1043,6 +1066,24 @@ async function doLogin(){
   const u=document.getElementById('loginUser').value.trim();
   const p=document.getElementById('loginPass').value;
   const err=document.getElementById('loginErr');
+  const btn=document.querySelector('.btn-login');
+  const spinnerContainer = document.getElementById('loginSpinnerContainer');
+  
+  if (!u || !p) {
+    err.textContent = 'Please enter both username and password';
+    err.style.display = 'block';
+    return;
+  }
+
+  // Hide button, show spinner
+  btn.style.display = 'none';
+  spinnerContainer.style.display = 'flex';
+  err.style.display = 'none';
+  
+  // Disable inputs during load
+  document.getElementById('loginUser').disabled = true;
+  document.getElementById('loginPass').disabled = true;
+
   try {
     const res = await fetch('api/login.php', {
       method: 'POST',
@@ -1067,10 +1108,20 @@ async function doLogin(){
     } else {
       err.textContent = data.message || 'Invalid credentials';
       err.style.display='block';
+      // Restore UI on failure
+      btn.style.display = 'block';
+      spinnerContainer.style.display = 'none';
+      document.getElementById('loginUser').disabled = false;
+      document.getElementById('loginPass').disabled = false;
     }
   } catch (e) {
     err.textContent = 'Connection error';
     err.style.display='block';
+    // Restore UI on failure
+    btn.style.display = 'block';
+    spinnerContainer.style.display = 'none';
+    document.getElementById('loginUser').disabled = false;
+    document.getElementById('loginPass').disabled = false;
   }
 }
 async function doLogout(){
@@ -1080,6 +1131,10 @@ async function doLogout(){
   document.getElementById('loginPage').style.display='flex';
   document.getElementById('loginUser').value='';
   document.getElementById('loginPass').value='';
+  document.getElementById('loginUser').disabled = false;
+  document.getElementById('loginPass').disabled = false;
+  document.querySelector('.btn-login').style.display = 'block';
+  document.getElementById('loginSpinnerContainer').style.display = 'none';
   if(notifPanelOpen)toggleNotifPanel();
   if(adminSettingsPanelOpen) {
     adminSettingsPanelOpen = false;
@@ -1335,7 +1390,7 @@ function renderNotifications(){
     const label=n.type==='warning'?'Warning':n.type==='success'?'Success':n.type==='pending'?'Pending':'Info';
     
     const item = document.createElement('div');
-    item.className = `notif-item ${n.read?'':'unread'} type-${n.type}`;
+    item.className = `notif-item ${n.read?'':'unread'} type-${n.type}` + (n.id === expandedNotifId ? ' expanded' : '');
     item.id = `notif-${n.id}`;
     
     const header = document.createElement('div');
@@ -1398,23 +1453,15 @@ function renderNotifications(){
         markRead(n.id);
       });
       actionsDiv.appendChild(readBtn);
-    }
-    
-    if (!n.completed) {
-      const compBtn = document.createElement('button');
-      compBtn.className = 'btn btn-green btn-sm notif-read-btn';
-      compBtn.textContent = 'Mark as completed';
-      compBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        markCompleted(n.id);
-      });
-      actionsDiv.appendChild(compBtn);
     } else {
-      const compSpan = document.createElement('span');
-      compSpan.style.fontSize = '.78rem';
-      compSpan.style.color = 'var(--green)';
-      compSpan.textContent = '✓ Completed';
-      actionsDiv.appendChild(compSpan);
+      const unreadBtn = document.createElement('button');
+      unreadBtn.className = 'btn btn-outline btn-sm notif-read-btn';
+      unreadBtn.textContent = 'Mark as unread';
+      unreadBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        markUnread(n.id);
+      });
+      actionsDiv.appendChild(unreadBtn);
     }
     
     detail.appendChild(actionsDiv);
@@ -1423,10 +1470,18 @@ function renderNotifications(){
   });
 }
 function toggleNotifDetail(id){
-  const item=document.getElementById('notif-'+id);
-  const was=item.classList.contains('expanded');
-  document.querySelectorAll('.notif-item.expanded').forEach(el=>el.classList.remove('expanded'));
-  if(!was){item.classList.add('expanded');const n=notifications.find(x=>x.id===id);if(n&&!n.read){markRead(id);}}
+  const was = (expandedNotifId === id);
+  if (was) {
+    expandedNotifId = null;
+  } else {
+    expandedNotifId = id;
+    const n = notifications.find(x => x.id === id);
+    if (n && !n.read) {
+      markRead(id);
+      return;
+    }
+  }
+  renderNotifications();
 }
 async function markRead(id){
   const n=notifications.find(x=>x.id===id);
@@ -1438,6 +1493,22 @@ async function markRead(id){
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action: 'read' })
+      });
+    } catch(e) {
+      console.error('Failed to update notification in database', e);
+    }
+  }
+}
+async function markUnread(id){
+  const n=notifications.find(x=>x.id===id);
+  if(n){
+    n.read=false;
+    renderNotifications();
+    try {
+      await fetch('api/update_notification.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action: 'unread' })
       });
     } catch(e) {
       console.error('Failed to update notification in database', e);
@@ -1514,16 +1585,13 @@ function buildTabs(){
     nav.appendChild(btn);
   });
   
-  if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Supervisor')) {
-    const cpBtn = document.createElement('button');
-    cpBtn.className = 'btn btn-navy btn-sm';
-    cpBtn.textContent = 'Create Project';
-    cpBtn.id = 'monthNavCreateProjectBtn';
-    cpBtn.style.marginLeft = '12px';
-    cpBtn.style.alignSelf = 'center';
-    cpBtn.style.marginBottom = '6px';
-    cpBtn.onclick = openCreateProjectModal;
-    nav.appendChild(cpBtn);
+  const cpContainer = document.getElementById('filterBarCreateProjectContainer');
+  if (cpContainer) {
+    if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Supervisor')) {
+      cpContainer.style.display = 'flex';
+    } else {
+      cpContainer.style.display = 'none';
+    }
   }
 }
 

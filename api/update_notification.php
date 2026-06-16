@@ -28,6 +28,8 @@ if (empty($id) || empty($action)) {
 
 if ($action === 'read') {
     $sql = "UPDATE notifications SET is_read = 1 WHERE id = ? AND username = ?";
+} else if ($action === 'unread') {
+    $sql = "UPDATE notifications SET is_read = 0 WHERE id = ? AND username = ?";
 } else if ($action === 'complete') {
     $sql = "UPDATE notifications SET is_read = 1, is_completed = 1 WHERE id = ? AND username = ?";
 } else {
