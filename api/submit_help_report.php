@@ -2,6 +2,7 @@
 header("Content-Type: application/json");
 require_once 'bootstrap.php';
 require_once 'config.php';
+require_once 'notify_n8n.php';
 
 $username = $_SESSION['username'] ?? '';
 $user_role = $_SESSION['role'] ?? '';
@@ -89,6 +90,13 @@ if (!empty($admins)) {
 if ($success) {
     $conn->commit();
     echo json_encode(["success" => true, "message" => "Report submitted successfully."]);
+    notify_n8n([
+        "event" => "help_report",
+        "source_user" => $username,
+        "detail" => $details,
+        "report_id" => $reportId,
+        "occurred_at" => date('c')
+    ]);
 } else {
     $conn->rollback();
     echo json_encode(["success" => false, "message" => "Failed to notify administrators: " . $errorMsg]);

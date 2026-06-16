@@ -5,6 +5,7 @@ ini_set('display_errors', 0);
 try {
 header("Content-Type: application/json");
 require 'config.php';
+require_once 'notify_n8n.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 $username = $data['username'] ?? '';
@@ -44,6 +45,14 @@ $failures = $userCount;
 if ($failures >= 5) {
     http_response_code(429);
     echo json_encode(["status" => "error", "message" => "Too many failed login attempts. Please reach out to an admin for assistance."]);
+    notify_n8n([
+        "event" => "lockout",
+        "source_user" => $username,
+        "detail" => "Account locked after 5 failed login attempts. IP: " . $ip,
+        "ip" => $ip,
+        "attempts" => 5,
+        "occurred_at" => date('c')
+    ]);
     exit;
 }
 

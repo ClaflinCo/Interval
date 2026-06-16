@@ -2,6 +2,7 @@
 header("Content-Type: application/json");
 require_once 'bootstrap.php';
 require_once 'config.php';
+require_once 'notify_n8n.php';
 
 $username = $_SESSION['username'] ?? '';
 $user_role = $_SESSION['role'] ?? '';
@@ -100,6 +101,15 @@ $stmt->close();
 if ($success) {
     $conn->commit();
     echo json_encode(["success" => true, "message" => "Request submitted successfully to administrators."]);
+    notify_n8n([
+        "event" => "project_change_request",
+        "source_user" => $username,
+        "detail" => "Project: " . $project . " | Type: " . $requestType . " | Details: " . $details,
+        "request_id" => $requestId,
+        "project" => $project,
+        "request_type" => $requestType,
+        "occurred_at" => date('c')
+    ]);
 } else {
     $conn->rollback();
     echo json_encode(["success" => false, "message" => "Failed to save notifications: " . $errorMsg]);
