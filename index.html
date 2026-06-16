@@ -1082,6 +1082,14 @@ async function doLogout(){
   if (btn) btn.style.display = 'none';
   const helpBtn = document.getElementById('helpBtn');
   if (helpBtn) helpBtn.style.display = 'none';
+  
+  // Close and clear the entry form if open
+  const form=document.getElementById('addForm');
+  if (form && form.classList.contains('open')) {
+    toggleAddForm();
+  } else {
+    clearForm();
+  }
 }
 
 async function checkSession() {
@@ -1932,15 +1940,19 @@ function toggleAddForm(){
   const form=document.getElementById('addForm');
   const open=form.classList.toggle('open');
   document.getElementById('toggleAddBtn').textContent=open?'✕ Close':'+ Add Entry';
-  if(open&&!editingId){
+  if(open){
+    if(!editingId) {
+      clearForm();
+      const curProj=document.getElementById('uiProjectFilter').value;
+      if(curProj&&curProj!=='NEW_PROJECT')document.getElementById('fProject').value=curProj;
+      const vn=document.getElementById('viewerFormNote'),hf=document.getElementById('hoursField');
+      // All roles save directly — no pending approval workflow
+      vn.style.display='none';
+      document.getElementById('saveEntryBtn').textContent='Save Entry';
+      hf.style.display='';
+    }
+  } else {
     clearForm();
-    const curProj=document.getElementById('uiProjectFilter').value;
-    if(curProj&&curProj!=='NEW_PROJECT')document.getElementById('fProject').value=curProj;
-    const vn=document.getElementById('viewerFormNote'),hf=document.getElementById('hoursField');
-    // All roles save directly — no pending approval workflow
-    vn.style.display='none';
-    document.getElementById('saveEntryBtn').textContent='Save Entry';
-    hf.style.display='';
   }
 }
 function clearForm(){
