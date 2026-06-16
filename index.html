@@ -341,7 +341,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
         <button class="close-notif-btn" onclick="toggleAdminSettingsPanel()">✕</button>
       </div>
     </div>
-    <div class="notif-list" style="padding:22px; overflow-y:auto;">
+    <div class="notif-list" style="padding:22px 16px; overflow-y:auto;">
       <!-- Lockout Management Section (hidden if there are no lockouts) -->
       <div id="lockoutManagerSection" style="display:none;">
         <h3 style="font-size:0.9rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; font-weight:700;">
@@ -354,11 +354,11 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <table style="width:100%; border-collapse:collapse;">
             <thead>
               <tr style="background:#f8f9fa;">
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">User</th>
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">IP Address</th>
-                <th style="padding:10px 10px; text-align:center; font-size:0.7rem;">Attempts</th>
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Last Attempt</th>
-                <th style="padding:10px 10px; text-align:right; font-size:0.7rem;">Action</th>
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em;">User</th>
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em;">IP Address</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em;">Attempts</th>
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em;">Last Attempt</th>
+                <th style="padding:10px 6px; text-align:right; font-size:0.7rem; letter-spacing:0.03em;">Action</th>
               </tr>
             </thead>
             <tbody id="lockoutTableBody">
@@ -384,11 +384,11 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
             <thead>
               <tr style="background:#f8f9fa;">
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem; width:22%;">Project</th>
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem; width:16%;">Supervisor</th>
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem; width:18%;">Type</th>
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem; width:22%;">Details</th>
-                <th style="padding:10px 10px; text-align:right; font-size:0.7rem; width:22%;">Actions</th>
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:19%;">Project</th>
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:19%;">Supervisor</th>
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:16%;">Type</th>
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:19%;">Details</th>
+                <th style="padding:10px 6px; text-align:right; font-size:0.7rem; letter-spacing:0.03em; width:27%;">Actions</th>
               </tr>
             </thead>
             <tbody id="changeRequestTableBody">
@@ -2775,31 +2775,31 @@ async function loadLockouts() {
           const tr = document.createElement('tr');
           
           const tdUser = document.createElement('td');
-          tdUser.style.padding = '10px 10px';
+          tdUser.style.padding = '10px 6px';
           tdUser.style.fontWeight = '600';
           tdUser.textContent = l.username || '—';
           tr.appendChild(tdUser);
           
           const tdIP = document.createElement('td');
-          tdIP.style.padding = '10px 10px';
+          tdIP.style.padding = '10px 6px';
           tdIP.style.fontWeight = '600';
           tdIP.textContent = l.ip_address || '—';
           tr.appendChild(tdIP);
           
           const tdCount = document.createElement('td');
-          tdCount.style.padding = '10px 10px';
+          tdCount.style.padding = '10px 6px';
           tdCount.style.textAlign = 'center';
           tdCount.textContent = l.count || 0;
           tr.appendChild(tdCount);
           
           const tdTime = document.createElement('td');
-          tdTime.style.padding = '10px 10px';
+          tdTime.style.padding = '10px 6px';
           tdTime.style.fontSize = '0.75rem';
           tdTime.textContent = l.last_attempt || '—';
           tr.appendChild(tdTime);
           
           const tdAction = document.createElement('td');
-          tdAction.style.padding = '10px 10px';
+          tdAction.style.padding = '10px 6px';
           tdAction.style.textAlign = 'right';
           const btnUnlock = document.createElement('button');
           btnUnlock.className = 'btn btn-navy btn-sm';
@@ -2834,38 +2834,45 @@ async function loadLockouts() {
           const tr = document.createElement('tr');
           
           const tdProj = document.createElement('td');
-          tdProj.style.padding = '10px 10px';
+          tdProj.style.padding = '10px 6px';
+          tdProj.style.textAlign = 'left';
           tdProj.style.fontWeight = '600';
           tdProj.style.whiteSpace = 'normal';
-          tdProj.style.wordBreak = 'break-all';
+          tdProj.style.overflowWrap = 'break-word';
+          tdProj.style.wordBreak = 'normal';
           tdProj.textContent = r.project || '—';
           tr.appendChild(tdProj);
           
           const tdSup = document.createElement('td');
-          tdSup.style.padding = '10px 10px';
+          tdSup.style.padding = '10px 6px';
+          tdSup.style.textAlign = 'left';
           tdSup.style.whiteSpace = 'normal';
-          tdSup.style.wordBreak = 'break-all';
+          tdSup.style.overflowWrap = 'break-word';
+          tdSup.style.wordBreak = 'normal';
           tdSup.textContent = r.supervisor || '—';
           tr.appendChild(tdSup);
           
           const tdType = document.createElement('td');
-          tdType.style.padding = '10px 10px';
+          tdType.style.padding = '10px 6px';
+          tdType.style.textAlign = 'left';
           tdType.style.fontSize = '0.75rem';
           tdType.style.whiteSpace = 'normal';
           tdType.textContent = r.request_type || '—';
           tr.appendChild(tdType);
           
           const tdDetails = document.createElement('td');
-          tdDetails.style.padding = '10px 10px';
+          tdDetails.style.padding = '10px 6px';
+          tdDetails.style.textAlign = 'left';
           tdDetails.style.fontSize = '0.75rem';
           tdDetails.style.whiteSpace = 'normal';
-          tdDetails.style.wordBreak = 'break-all';
+          tdDetails.style.overflowWrap = 'break-word';
+          tdDetails.style.wordBreak = 'normal';
           tdDetails.textContent = r.details || '—';
           tdDetails.title = r.details || '';
           tr.appendChild(tdDetails);
           
           const tdActions = document.createElement('td');
-          tdActions.style.padding = '10px 10px';
+          tdActions.style.padding = '10px 6px';
           tdActions.style.textAlign = 'right';
           tdActions.style.whiteSpace = 'nowrap';
           
