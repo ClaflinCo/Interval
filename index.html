@@ -381,15 +381,14 @@ tbody td{padding:10px 13px;vertical-align:middle}
           The following project change requests have been submitted by supervisors. You can mark them as Resolved or Denied.
         </p>
         <div class="table-wrap" style="border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
-          <table style="width:100%; border-collapse:collapse;">
+          <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
             <thead>
               <tr style="background:#f8f9fa;">
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Project</th>
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Supervisor</th>
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Type</th>
-                <th style="padding:10px 10px; text-align:left; font-size:0.7rem;">Details</th>
-                <th style="padding:10px 10px; text-align:center; font-size:0.7rem;">Status</th>
-                <th style="padding:10px 10px; text-align:right; font-size:0.7rem;">Actions</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem; width:22%;">Project</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem; width:16%;">Supervisor</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem; width:18%;">Type</th>
+                <th style="padding:10px 10px; text-align:left; font-size:0.7rem; width:22%;">Details</th>
+                <th style="padding:10px 10px; text-align:right; font-size:0.7rem; width:22%;">Actions</th>
               </tr>
             </thead>
             <tbody id="changeRequestTableBody">
@@ -1682,11 +1681,14 @@ function toggleAllotmentEdit(){
         reqBtn.textContent = '+';
         reqBtn.title = 'Request project change from admin';
         reqBtn.style.background = 'none';
-        reqBtn.style.border = 'none';
+        reqBtn.style.border = '2px solid var(--gold)';
+        reqBtn.style.borderRadius = '50%';
+        reqBtn.style.width = '20px';
+        reqBtn.style.height = '20px';
         reqBtn.style.padding = '0';
         reqBtn.style.margin = '0 0 0 8px';
         reqBtn.style.color = 'var(--gold)';
-        reqBtn.style.fontSize = '1.3rem';
+        reqBtn.style.fontSize = '1.1rem';
         reqBtn.style.fontWeight = '800';
         reqBtn.style.lineHeight = '1';
         reqBtn.style.cursor = 'pointer';
@@ -2570,65 +2572,42 @@ async function loadLockouts() {
           const tdProj = document.createElement('td');
           tdProj.style.padding = '10px 10px';
           tdProj.style.fontWeight = '600';
+          tdProj.style.whiteSpace = 'normal';
+          tdProj.style.wordBreak = 'break-all';
           tdProj.textContent = r.project || '—';
           tr.appendChild(tdProj);
           
           const tdSup = document.createElement('td');
           tdSup.style.padding = '10px 10px';
+          tdSup.style.whiteSpace = 'normal';
+          tdSup.style.wordBreak = 'break-all';
           tdSup.textContent = r.supervisor || '—';
           tr.appendChild(tdSup);
           
           const tdType = document.createElement('td');
           tdType.style.padding = '10px 10px';
           tdType.style.fontSize = '0.75rem';
+          tdType.style.whiteSpace = 'normal';
           tdType.textContent = r.request_type || '—';
           tr.appendChild(tdType);
           
           const tdDetails = document.createElement('td');
           tdDetails.style.padding = '10px 10px';
           tdDetails.style.fontSize = '0.75rem';
-          tdDetails.style.maxWidth = '150px';
-          tdDetails.style.overflow = 'hidden';
-          tdDetails.style.textOverflow = 'ellipsis';
-          tdDetails.style.whiteSpace = 'nowrap';
+          tdDetails.style.whiteSpace = 'normal';
+          tdDetails.style.wordBreak = 'break-all';
           tdDetails.textContent = r.details || '—';
           tdDetails.title = r.details || '';
           tr.appendChild(tdDetails);
           
-          const tdStatus = document.createElement('td');
-          tdStatus.style.padding = '10px 10px';
-          tdStatus.style.textAlign = 'center';
-          
-          const statusSpan = document.createElement('span');
-          statusSpan.style.padding = '2px 6px';
-          statusSpan.style.borderRadius = '10px';
-          statusSpan.style.fontSize = '0.7rem';
-          statusSpan.style.fontWeight = 'bold';
-          statusSpan.style.textTransform = 'uppercase';
-          
-          if (r.status === 'Pending') {
-            statusSpan.style.background = '#fef3c7';
-            statusSpan.style.color = '#92400e';
-            statusSpan.textContent = 'Pending';
-          } else if (r.status === 'Resolved') {
-            statusSpan.style.background = '#d1fae5';
-            statusSpan.style.color = '#065f46';
-            statusSpan.textContent = 'Resolved';
-          } else {
-            statusSpan.style.background = '#fee2e2';
-            statusSpan.style.color = '#991b1b';
-            statusSpan.textContent = 'Denied';
-          }
-          tdStatus.appendChild(statusSpan);
-          tr.appendChild(tdStatus);
-          
           const tdActions = document.createElement('td');
           tdActions.style.padding = '10px 10px';
           tdActions.style.textAlign = 'right';
+          tdActions.style.whiteSpace = 'nowrap';
           
           if (r.status === 'Pending') {
             const btnResolve = document.createElement('button');
-            btnResolve.className = 'btn btn-green btn-sm';
+            btnResolve.className = 'btn btn-navy btn-sm';
             btnResolve.textContent = 'Resolve';
             btnResolve.style.padding = '3px 8px';
             btnResolve.style.fontSize = '0.72rem';
@@ -2636,7 +2615,7 @@ async function loadLockouts() {
             btnResolve.addEventListener('click', () => resolveChangeRequest(r.id, 'Resolved'));
             
             const btnDeny = document.createElement('button');
-            btnDeny.className = 'btn btn-danger btn-sm';
+            btnDeny.className = 'btn btn-outline btn-sm';
             btnDeny.textContent = 'Deny';
             btnDeny.style.padding = '3px 8px';
             btnDeny.style.fontSize = '0.72rem';
@@ -2645,8 +2624,9 @@ async function loadLockouts() {
             tdActions.appendChild(btnResolve);
             tdActions.appendChild(btnDeny);
           } else {
-            tdActions.textContent = '—';
+            tdActions.textContent = r.status || '—';
             tdActions.style.color = 'var(--ink2)';
+            tdActions.style.fontSize = '0.75rem';
           }
           tr.appendChild(tdActions);
           
