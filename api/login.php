@@ -24,20 +24,8 @@ if ($cleanStmt) {
     $cleanStmt->close();
 }
 
-// 2. Count failed attempts by IP and username
-$ipCount = 0;
+// 2. Count failed attempts by username
 $userCount = 0;
-
-$ipStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM login_attempts WHERE ip_address = ?");
-if ($ipStmt) {
-    $ipStmt->bind_param("s", $ip);
-    $ipStmt->execute();
-    $res = $ipStmt->get_result();
-    if ($row = $res->fetch_assoc()) {
-        $ipCount = (int)$row['cnt'];
-    }
-    $ipStmt->close();
-}
 
 $userStmt = $conn->prepare("SELECT COUNT(*) as cnt FROM login_attempts WHERE username = ?");
 if ($userStmt) {
@@ -50,7 +38,7 @@ if ($userStmt) {
     $userStmt->close();
 }
 
-$failures = max($ipCount, $userCount);
+$failures = $userCount;
 
 // Lockout after 5 failures
 if ($failures >= 5) {
@@ -71,10 +59,10 @@ $result = $stmt->get_result();
 
 if($user = $result->fetch_assoc()){
     if(password_verify($password, $user['password_hash'])){
-        // Clear previous failed attempts
-        $delStmt = $conn->prepare("DELETE FROM login_attempts WHERE ip_address = ? OR username = ?");
+        // Clear previous failed attempts for this user
+        $delStmt = $conn->prepare("DELETE FROM login_attempts WHERE username = ?");
         if ($delStmt) {
-            $delStmt->bind_param("ss", $ip, $username);
+            $delStmt->bind_param("s", $username);
             $delStmt->execute();
             $delStmt->close();
         }

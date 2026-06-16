@@ -59,7 +59,7 @@ MOCK_LOCKOUTS = [
         "ip_address": "192.168.1.100",
         "count": 6,
         "last_attempt": "2026-06-15 10:05:00",
-        "type": "both"
+        "type": "username"
     }
 ]
 

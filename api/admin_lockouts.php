@@ -28,8 +28,7 @@ if ($method === 'GET') {
         while ($row = $res->fetch_assoc()) {
             $u = $row['username'] ?? '';
             $ip = $row['ip_address'] ?? '';
-            $key = $u . '|' . $ip;
-            $lockouts[$key] = [
+            $lockouts[] = [
                 'username' => $u,
                 'ip_address' => $ip,
                 'count' => (int)$row['count'],
@@ -39,36 +38,9 @@ if ($method === 'GET') {
         }
     }
 
-    // Query locked out IPs (>= 5 failed attempts)
-    $ipQuery = "SELECT ip_address, COUNT(*) as count, MAX(attempt_time) as last_attempt, MAX(username) as username
-                FROM login_attempts 
-                GROUP BY ip_address 
-                HAVING count >= 5";
-    $res = $conn->query($ipQuery);
-    if ($res) {
-        while ($row = $res->fetch_assoc()) {
-            $u = $row['username'] ?? '';
-            $ip = $row['ip_address'] ?? '';
-            $key = $u . '|' . $ip;
-            if (isset($lockouts[$key])) {
-                $lockouts[$key]['count'] = max($lockouts[$key]['count'], (int)$row['count']);
-                $lockouts[$key]['last_attempt'] = max($lockouts[$key]['last_attempt'], $row['last_attempt']);
-                $lockouts[$key]['type'] = 'both';
-            } else {
-                $lockouts[$key] = [
-                    'username' => $u,
-                    'ip_address' => $ip,
-                    'count' => (int)$row['count'],
-                    'last_attempt' => $row['last_attempt'],
-                    'type' => 'ip'
-                ];
-            }
-        }
-    }
-
     echo json_encode([
         "success" => true,
-        "lockouts" => array_values($lockouts)
+        "lockouts" => $lockouts
     ]);
     exit;
 } elseif ($method === 'POST') {

@@ -2258,15 +2258,13 @@ async function loadLockouts() {
           tdTime.style.fontSize = '0.75rem';
           tdTime.textContent = l.last_attempt || '—';
           tr.appendChild(tdTime);
-          
           const tdAction = document.createElement('td');
           tdAction.style.padding = '10px 10px';
           tdAction.style.textAlign = 'right';
           const btnUnlock = document.createElement('button');
           btnUnlock.className = 'btn btn-navy btn-sm';
           btnUnlock.textContent = 'Unlock';
-          const targetVal = `${l.username || ''}|${l.ip_address || ''}`;
-          btnUnlock.addEventListener('click', () => resetLockout('both', targetVal));
+          btnUnlock.addEventListener('click', () => resetLockout('username', l.username));
           tdAction.appendChild(btnUnlock);
           tr.appendChild(tdAction);
           
@@ -2304,6 +2302,7 @@ async function resetLockout(type, target) {
     }
   } else {
     confirmMsg = `Are you sure you want to unlock ${type === 'ip' ? 'IP' : 'user'} "${target}"?`;
+    displayTarget = `${type === 'ip' ? 'IP' : 'User'} "${target}"`;
   }
   const confirmed = await showConfirm(confirmMsg, "Reset Lockout");
   if (!confirmed) return;
