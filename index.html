@@ -606,6 +606,47 @@ tbody td{padding:10px 13px;vertical-align:middle}
 </div>
 
 
+<!-- Request Change Modal -->
+<div class="modal-overlay" id="requestChangeModal">
+  <div class="modal" style="max-width: 480px; position: relative;">
+    <button class="close-notif-btn" style="position: absolute; top: 15px; right: 15px; font-size: 1.5rem;" onclick="closeRequestChangeModal()">✕</button>
+    <h2 style="color: var(--navy); border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 15px;">Request Project Change</h2>
+    <h3 id="rcProjectNameLabel" style="font-size: 1rem; color: var(--gold); margin-bottom: 20px; font-weight: 600;">Project: —</h3>
+    
+    <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <input type="radio" id="optDelete" name="requestType" value="Delete Project" checked onchange="onRequestTypeChange()">
+        <label for="optDelete" style="width: 120px; font-size: 0.85rem; font-weight: 600; text-transform: none; margin-bottom: 0;">Delete Project</label>
+        <input type="text" id="detailsDelete" placeholder="Reason/details for deletion..." style="flex: 1; padding: 6px 10px; font-size: 0.8rem; border: 1.5px solid var(--border); border-radius: 5px;">
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <input type="radio" id="optService" name="requestType" value="Add Service" onchange="onRequestTypeChange()">
+        <label for="optService" style="width: 120px; font-size: 0.85rem; font-weight: 600; text-transform: none; margin-bottom: 0;">Add Service</label>
+        <input type="text" id="detailsService" placeholder="Specify service(s) to add..." style="flex: 1; padding: 6px 10px; font-size: 0.8rem; border: 1.5px solid var(--border); border-radius: 5px;" disabled>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <input type="radio" id="optAssignment" name="requestType" value="Add Assignment" onchange="onRequestTypeChange()">
+        <label for="optAssignment" style="width: 120px; font-size: 0.85rem; font-weight: 600; text-transform: none; margin-bottom: 0;">Add Assignment</label>
+        <input type="text" id="detailsAssignment" placeholder="Specify user(s) to assign..." style="flex: 1; padding: 6px 10px; font-size: 0.8rem; border: 1.5px solid var(--border); border-radius: 5px;" disabled>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <input type="radio" id="optOther" name="requestType" value="Other" onchange="onRequestTypeChange()">
+        <label for="optOther" style="width: 120px; font-size: 0.85rem; font-weight: 600; text-transform: none; margin-bottom: 0;">Other</label>
+        <input type="text" id="detailsOther" placeholder="Describe your request..." style="flex: 1; padding: 6px 10px; font-size: 0.8rem; border: 1.5px solid var(--border); border-radius: 5px;" disabled>
+      </div>
+    </div>
+    
+    <div class="modal-actions" style="border-top: 1.5px solid var(--border); padding-top: 15px;">
+      <button class="btn btn-outline" onclick="closeRequestChangeModal()">Cancel</button>
+      <button class="btn btn-navy" onclick="submitRequestChange()">Submit to Admin</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Export Modal -->
 <div class="export-modal-overlay" id="exportModal">
   <div class="export-modal">
@@ -1329,8 +1370,8 @@ function renderMonth(){
       const rowStyle = isSingle 
         ? 'display:flex; justify-content:space-between; align-items:center; font-size:1.5rem; font-weight:700;' 
         : 'display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px; border-bottom:1px solid #f0f0f0; padding-bottom:2px';
-      
-      const label = `<span>${esc(pName)}</span>`;
+      const cust = PROJECTS_META[pName] && PROJECTS_META[pName].customer ? ` (${PROJECTS_META[pName].customer})` : '';
+      const label = `<span>${esc(pName)}${esc(cust)}</span>`;
       
       allotHtml += `<div style="${rowStyle}">${label}<span>${pAllot}</span></div>`;
       usedHtml += `<div style="${rowStyle}">${label}<span>${fmtH(pUsed)}</span></div>`;
@@ -1584,8 +1625,34 @@ function toggleAllotmentEdit(){
       span.style.textAlign = 'left';
       span.style.flex = '1';
       span.style.marginRight = '10px';
+      span.style.display = 'inline-flex';
+      span.style.alignItems = 'center';
+      span.style.gap = '8px';
+      
       const cust = PROJECTS_META[p] && PROJECTS_META[p].customer ? ` (${PROJECTS_META[p].customer})` : '';
-      span.textContent = `${p}${cust}`;
+      const textNode = document.createTextNode(`${p}${cust}`);
+      span.appendChild(textNode);
+      
+      if (currentUser && currentUser.role === 'Supervisor') {
+        const reqBtn = document.createElement('button');
+        reqBtn.className = 'btn btn-outline';
+        reqBtn.textContent = '+';
+        reqBtn.title = 'Request project change from admin';
+        reqBtn.style.padding = '0px 6px';
+        reqBtn.style.fontSize = '0.85rem';
+        reqBtn.style.height = '20px';
+        reqBtn.style.minHeight = '20px';
+        reqBtn.style.lineHeight = '1';
+        reqBtn.style.display = 'inline-flex';
+        reqBtn.style.alignItems = 'center';
+        reqBtn.style.justifyContent = 'center';
+        reqBtn.style.cursor = 'pointer';
+        reqBtn.onclick = (e) => {
+          e.preventDefault();
+          openRequestChangeModal(p);
+        };
+        span.appendChild(reqBtn);
+      }
       
       const input = document.createElement('input');
       input.className = 'allotment-input';
@@ -2266,6 +2333,83 @@ async function submitCreateProject(){
     }
   } catch(e) {
     await showAlert("Network error while creating project.", "Connection Error", "error");
+  }
+}
+
+let requestChangeProject = '';
+
+function openRequestChangeModal(pName) {
+  requestChangeProject = pName;
+  document.getElementById('rcProjectNameLabel').textContent = `Project: ${pName}`;
+  document.getElementById('optDelete').checked = true;
+  
+  // Reset fields
+  ['detailsDelete', 'detailsService', 'detailsAssignment', 'detailsOther'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = '';
+      el.disabled = (id !== 'detailsDelete');
+    }
+  });
+  
+  document.getElementById('requestChangeModal').classList.add('open');
+}
+
+function closeRequestChangeModal() {
+  document.getElementById('requestChangeModal').classList.remove('open');
+}
+
+function onRequestTypeChange() {
+  const selectedRadio = document.querySelector('input[name="requestType"]:checked');
+  if (!selectedRadio) return;
+  const selectedRadioId = selectedRadio.id;
+  const activeInputId = selectedRadioId === 'optDelete' ? 'detailsDelete' :
+                        selectedRadioId === 'optService' ? 'detailsService' :
+                        selectedRadioId === 'optAssignment' ? 'detailsAssignment' : 'detailsOther';
+  
+  ['detailsDelete', 'detailsService', 'detailsAssignment', 'detailsOther'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.disabled = (id !== activeInputId);
+    }
+  });
+}
+
+async function submitRequestChange() {
+  const selectedRadio = document.querySelector('input[name="requestType"]:checked');
+  if (!selectedRadio) return;
+  const requestType = selectedRadio.value;
+  
+  const activeInputId = selectedRadio.id === 'optDelete' ? 'detailsDelete' :
+                        selectedRadio.id === 'optService' ? 'detailsService' :
+                        selectedRadio.id === 'optAssignment' ? 'detailsAssignment' : 'detailsOther';
+  
+  const details = document.getElementById(activeInputId).value.trim();
+  
+  if (!details) {
+    await showAlert("Please provide details for the request.", "Validation Error", "error");
+    return;
+  }
+  
+  try {
+    const res = await fetch('api/request_project_change.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project: requestChangeProject,
+        requestType: requestType,
+        details: details
+      })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('info', 'Request Submitted', `Change request for "${requestChangeProject}" has been sent to administrators.`, null);
+      closeRequestChangeModal();
+    } else {
+      await showAlert("Error: " + (d.message || "Unknown error"), "Request Submission Error", "error");
+    }
+  } catch(e) {
+    await showAlert("Network error while submitting request.", "Connection Error", "error");
   }
 }
 

@@ -1,0 +1,90 @@
+<?php
+header("Content-Type: application/json");
+require_once 'bootstrap.php';
+require_once 'config.php';
+
+$username = $_SESSION['username'] ?? '';
+$user_role = $_SESSION['role'] ?? '';
+
+if (empty($username)) {
+    http_response_code(401);
+    echo json_encode(["success" => false, "message" => "Unauthorized"]);
+    exit;
+}
+
+if ($user_role !== 'Supervisor') {
+    http_response_code(403);
+    echo json_encode(["success" => false, "message" => "Only Supervisors can request project changes."]);
+    exit;
+}
+
+$input = file_get_contents("php://input");
+$data = json_decode($input, true);
+
+if (!$data) {
+    echo json_encode(["success" => false, "message" => "Invalid JSON input."]);
+    exit;
+}
+
+$project = trim($data['project'] ?? '');
+$requestType = trim($data['requestType'] ?? '');
+$details = trim($data['details'] ?? '');
+
+if (empty($project) || empty($requestType) || empty($details)) {
+    echo json_encode(["success" => false, "message" => "Missing required fields (Project, Request Type, or Details)."]);
+    exit;
+}
+
+// Get all Admin users
+$adminRes = $conn->query("SELECT username FROM users WHERE role = 'Admin'");
+if (!$adminRes) {
+    echo json_encode(["success" => false, "message" => "Failed to fetch administrators: " . $conn->error]);
+    exit;
+}
+
+$admins = [];
+while ($row = $adminRes->fetch_assoc()) {
+    $admins[] = $row['username'];
+}
+
+if (empty($admins)) {
+    echo json_encode(["success" => false, "message" => "No administrators found in the system."]);
+    exit;
+}
+
+// Start transaction to insert notifications
+$conn->begin_transaction();
+$success = true;
+$errorMsg = '';
+
+$notifSql = "INSERT INTO notifications (id, username, type, title, msg, month) VALUES (?, ?, ?, ?, ?, ?)";
+$stmt = $conn->prepare($notifSql);
+if (!$stmt) {
+    echo json_encode(["success" => false, "message" => "Prepare statement failed: " . $conn->error]);
+    exit;
+}
+
+$type = 'warning';
+$title = "Project Change Request: " . $project;
+$msg = "Supervisor " . $username . " requested: " . $requestType . ". Details: " . $details;
+$month = null;
+
+foreach ($admins as $admin) {
+    $id = bin2hex(random_bytes(16));
+    $stmt->bind_param("ssssss", $id, $admin, $type, $title, $msg, $month);
+    if (!$stmt->execute()) {
+        $success = false;
+        $errorMsg = $stmt->error;
+        break;
+    }
+}
+$stmt->close();
+
+if ($success) {
+    $conn->commit();
+    echo json_encode(["success" => true, "message" => "Request submitted successfully to administrators."]);
+} else {
+    $conn->rollback();
+    echo json_encode(["success" => false, "message" => "Failed to save notifications: " . $errorMsg]);
+}
+?>
