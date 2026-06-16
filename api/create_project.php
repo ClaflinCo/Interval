@@ -54,6 +54,12 @@ try {
     $allotment = isset($data['allotment']) ? (float)$data['allotment'] : 0.00;
     $assigned = trim($data['assigned'] ?? '');
     $startMonth = trim($data['startMonth'] ?? '');
+    $servicesRaw = $data['services'] ?? '';
+    if (is_array($servicesRaw)) {
+        $services = implode(', ', array_filter(array_map('trim', $servicesRaw)));
+    } else {
+        $services = trim($servicesRaw);
+    }
 
     if (empty($projectName) || empty($startMonth) || $duration < 1) {
         throw new Exception("Missing required fields (Project Name, Start Month, or Duration).");
@@ -89,19 +95,20 @@ try {
     $conn->begin_transaction();
 
     // Prepare statement to insert/update projects table
-    $projSql = "INSERT INTO projects (name, customer, duration, allotment, assigned, start_month, created_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?) 
+    $projSql = "INSERT INTO projects (name, customer, duration, allotment, assigned, start_month, created_by, services) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
                 ON DUPLICATE KEY UPDATE 
                     customer=VALUES(customer), 
                     duration=VALUES(duration), 
                     allotment=VALUES(allotment), 
                     assigned=VALUES(assigned), 
-                    start_month=VALUES(start_month)";
+                    start_month=VALUES(start_month),
+                    services=VALUES(services)";
     $projStmt = $conn->prepare($projSql);
     if (!$projStmt) {
         throw new Exception("Prepare projects statement failed: " . $conn->error);
     }
-    $projStmt->bind_param("ssidsss", $projectName, $customer, $duration, $allotment, $assigned, $startMonth, $username);
+    $projStmt->bind_param("ssidssss", $projectName, $customer, $duration, $allotment, $assigned, $startMonth, $username, $services);
     if (!$projStmt->execute()) {
         $projStmt->close();
         throw new Exception("Execute projects statement failed: " . $conn->error);

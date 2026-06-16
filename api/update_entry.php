@@ -141,7 +141,7 @@ try {
                                    t1.check_in = t2.check_in, t1.check_out = t2.check_out, 
                                    t1.staff_attended = t2.staff_attended, t1.hours_override = t2.hours_override, 
                                    t1.status = t2.status, t1.client_contact = t2.client_contact, 
-                                   t1.notes = t2.notes 
+                                   t1.notes = t2.notes, t1.services = t2.services 
                                WHERE t1.id = ? AND t2.id = ?";
                 $upStmt = $conn->prepare($updateSql);
                 if (!$upStmt) throw new Exception("Prepare failed: " . $conn->error);

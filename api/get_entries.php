@@ -20,7 +20,7 @@ $pending = [];
 // Fetch approved entries for the main log (filtered below)
 $sql = "SELECT id, submitted_by, project, entry_date as date, check_in as checkIn, 
                check_out as checkOut, staff_attended as staff, hours_override as hoursOverride, 
-               status, client_contact as client, notes, approval_status, edit_of_id as originalId 
+               status, client_contact as client, notes, approval_status, edit_of_id as originalId, services 
          FROM time_entries WHERE approval_status = 'Approved'";
 $result = $conn->query($sql);
 
@@ -28,7 +28,7 @@ $result = $conn->query($sql);
 $allowed_projects = [];
 $projectsMeta = [];
 
-$projSql = "SELECT name, customer, duration, allotment, assigned, created_by FROM projects";
+$projSql = "SELECT name, customer, duration, allotment, assigned, created_by, services FROM projects";
 $projRes = $conn->query($projSql);
 if ($projRes) {
     while($row = $projRes->fetch_assoc()) {
@@ -50,7 +50,8 @@ if ($projRes) {
                     "assigned" => $row['assigned'] ?? '',
                     "customer" => $row['customer'] ?? '',
                     "duration" => (int)($row['duration'] ?? 1),
-                    "created_by" => $row['created_by'] ?? ''
+                    "created_by" => $row['created_by'] ?? '',
+                    "services" => $row['services'] ?? ''
                 ];
             }
         }
@@ -86,7 +87,7 @@ if ($result) {
 // Fetch pending entries for the approvals panel
 $pendingSql = "SELECT id, submitted_by, project, entry_date as date, check_in as checkIn, 
                check_out as checkOut, staff_attended as staff, hours_override as hoursOverride, 
-               status, client_contact as client, notes, approval_status, edit_of_id as originalId 
+               status, client_contact as client, notes, approval_status, edit_of_id as originalId, services 
          FROM time_entries WHERE approval_status = 'Pending'";
 $pendingResult = $conn->query($pendingSql);
 

@@ -29,6 +29,7 @@ $hours_override = isset($data['hoursOverride']) && $data['hoursOverride'] !== nu
 $status = $data['status'] ?? '';
 $client_contact = $data['client'] ?? '';
 $notes = $data['notes'] ?? '';
+$services = trim($data['services'] ?? '');
 $action = $data['action'] ?? '';
 $id = isset($data['id']) ? (int)$data['id'] : null; // Entry ID for updates
 
@@ -95,15 +96,15 @@ if ($action === 'update' && !empty($id)) {
     $entryStmt->close();
 
     // Directly update the entry
-    $sql = "UPDATE time_entries SET project=?, entry_date=?, check_in=?, check_out=?, staff_attended=?, hours_override=?, status=?, client_contact=?, notes=?, approval_status='Approved' WHERE id=?";
+    $sql = "UPDATE time_entries SET project=?, entry_date=?, check_in=?, check_out=?, staff_attended=?, hours_override=?, status=?, client_contact=?, notes=?, services=?, approval_status='Approved' WHERE id=?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssdsssi", $project, $entry_date, $check_in, $check_out, $staff_attended, $hours_override, $status, $client_contact, $notes, $id);
+    $stmt->bind_param("sssssdssssi", $project, $entry_date, $check_in, $check_out, $staff_attended, $hours_override, $status, $client_contact, $notes, $services, $id);
 } else {
     // New entry: Directly insert as Approved
     $approval_status = 'Approved';
-    $sql = "INSERT INTO time_entries (submitted_by, project, entry_date, check_in, check_out, staff_attended, hours_override, status, client_contact, notes, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO time_entries (submitted_by, project, entry_date, check_in, check_out, staff_attended, hours_override, status, client_contact, notes, services, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssssdssss", $username, $project, $entry_date, $check_in, $check_out, $staff_attended, $hours_override, $status, $client_contact, $notes, $approval_status);
+    $stmt->bind_param("ssssssdsssss", $username, $project, $entry_date, $check_in, $check_out, $staff_attended, $hours_override, $status, $client_contact, $notes, $services, $approval_status);
 }
 
 if($stmt->execute()){

@@ -161,6 +161,10 @@ addColumn($conn, 'project_allotments', 'customer', "VARCHAR(100) DEFAULT NULL");
 addColumn($conn, 'project_allotments', 'duration', "INT DEFAULT 1");
 addColumn($conn, 'project_allotments', 'created_by', "VARCHAR(100) DEFAULT NULL");
 
+// Add services columns
+addColumn($conn, 'projects', 'services', "TEXT DEFAULT NULL");
+addColumn($conn, 'time_entries', 'services', "VARCHAR(100) DEFAULT NULL");
+
 // Migrate/Add columns to notifications table
 $notifCols = [];
 $res = $conn->query("SHOW COLUMNS FROM notifications");

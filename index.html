@@ -410,11 +410,17 @@ tbody td{padding:10px 13px;vertical-align:middle}
 
         <div class="add-form" id="addForm">
           <div id="viewerFormNote" class="viewer-note" style="display:none"></div>
-          <div class="form-grid">
+          <div class="form-grid" style="grid-template-columns: repeat(5, 1fr);">
             <div class="fg">
               <label>Project</label>
-              <select id="fProject" class="filter-select" style="min-width:0; width:100%">
+              <select id="fProject" class="filter-select" onchange="onProjectSelectChange()" style="min-width:0; width:100%">
                 <option value="">— Select Project —</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Service</label>
+              <select id="fService" class="filter-select" style="min-width:0; width:100%">
+                <option value="">— Select Service —</option>
               </select>
             </div>
             <div class="fg"><label>Date</label><input type="date" id="fDate"></div>
@@ -480,7 +486,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <table>
             <thead>
               <tr>
-                <th>Project</th><th>Date</th><th class="td-center">Check In</th><th class="td-center">Check Out</th>
+                <th>Project</th><th>Services</th><th>Date</th><th class="td-center">Check In</th><th class="td-center">Check Out</th>
                 <th>Staff</th><th class="td-center"># Staff</th><th class="td-center">Slot Duration</th><th class="td-center">Total Staff Hrs</th>
                 <th class="td-center">Status</th><th class="td-center">Hrs Remaining</th><th>Notes</th><th></th>
               </tr>
@@ -554,6 +560,29 @@ tbody td{padding:10px 13px;vertical-align:middle}
       <div class="fg" style="gap: 2px;">
         <label style="font-size: 0.65rem;">Assigned Users (comma-separated)</label>
         <input type="text" id="cpAssigned" style="padding: 7px 10px; font-size: 0.8rem;" required>
+      </div>
+      <div class="fg" style="gap: 2px; margin-top: 5px;">
+        <label style="font-size: 0.65rem;">Offered Services</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+            <input type="checkbox" name="cpServices" value="Placeholder 1" style="cursor: pointer;"> Placeholder 1
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+            <input type="checkbox" name="cpServices" value="Placeholder 2" style="cursor: pointer;"> Placeholder 2
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+            <input type="checkbox" name="cpServices" value="Placeholder 3" style="cursor: pointer;"> Placeholder 3
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+            <input type="checkbox" name="cpServices" value="Placeholder 4" style="cursor: pointer;"> Placeholder 4
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+            <input type="checkbox" name="cpServices" value="Placeholder 5" style="cursor: pointer;"> Placeholder 5
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
+            <input type="checkbox" name="cpServices" value="Placeholder 6" style="cursor: pointer;"> Placeholder 6
+          </label>
+        </div>
       </div>
       <div style="text-align: right; margin-top: 5px;">
         <button class="btn btn-gold btn-sm" onclick="submitCreateProject()" style="padding: 6px 14px; font-size: 0.75rem;">Create Project</button>
@@ -848,7 +877,10 @@ async function checkSession() {
 //  INIT & SAVE
 // ═══════════════════════════════════════════════════
 function updateProjectUI() {
-  const opStr = (p) => `<option value="${esc(p)}">${esc(p)}</option>`;
+  const opStr = (p) => {
+    const cust = PROJECTS_META[p] && PROJECTS_META[p].customer ? ` (${PROJECTS_META[p].customer})` : '';
+    return `<option value="${esc(p)}">${esc(p)}${esc(cust)}</option>`;
+  };
   const isAdmin = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'admin');
   const monthProjects = getActiveProjectsForMonth(currentMonth);
   const dropdownProjects = isAdmin ? PROJECTS : monthProjects;
@@ -1349,8 +1381,13 @@ function renderMonth(){
     
     const tdProject = document.createElement('td');
     tdProject.className = 'td-project';
-    tdProject.textContent = e.project;
+    const cust = PROJECTS_META[e.project] && PROJECTS_META[e.project].customer ? ` (${PROJECTS_META[e.project].customer})` : '';
+    tdProject.textContent = `${e.project}${cust}`;
     tr.appendChild(tdProject);
+    
+    const tdServices = document.createElement('td');
+    tdServices.textContent = e.services || '—';
+    tr.appendChild(tdServices);
     
     const tdDate = document.createElement('td');
     tdDate.style.whiteSpace = 'nowrap';
@@ -1453,7 +1490,7 @@ function renderMonth(){
     const tr=document.createElement('tr');
     tr.className='empty-state';
     const td=document.createElement('td');
-    td.colSpan = 12;
+    td.colSpan = 13;
     td.textContent = `No entries for ${currentMonth}. Click "+ Add Entry" to log time.`;
     tr.appendChild(td);
     body.appendChild(tr);
@@ -1530,6 +1567,7 @@ function toggleAllotmentEdit(){
     document.getElementById('cpDuration').value = '1';
     document.getElementById('cpAllotment').value = '30';
     document.getElementById('cpAssigned').value = '';
+    document.querySelectorAll('input[name="cpServices"]').forEach(cb => cb.checked = false);
     
     const container = document.getElementById('allotmentInputsContainer');
     container.innerHTML = '';
@@ -1546,7 +1584,8 @@ function toggleAllotmentEdit(){
       span.style.textAlign = 'left';
       span.style.flex = '1';
       span.style.marginRight = '10px';
-      span.textContent = p;
+      const cust = PROJECTS_META[p] && PROJECTS_META[p].customer ? ` (${PROJECTS_META[p].customer})` : '';
+      span.textContent = `${p}${cust}`;
       
       const input = document.createElement('input');
       input.className = 'allotment-input';
@@ -1633,7 +1672,8 @@ function toggleAddForm(){
 }
 function clearForm(){
   editingId=null;isHoursOverride=false;
-  ['fProject','fDate','fCheckIn','fCheckOut','fStaff','fClient','fNotes'].forEach(id=>document.getElementById(id).value='');
+  ['fProject','fService','fDate','fCheckIn','fCheckOut','fStaff','fClient','fNotes'].forEach(id=>document.getElementById(id).value='');
+  onProjectSelectChange();
   document.getElementById('fHours').value='';
   document.getElementById('fStatus').value='';
   document.getElementById('overrideNote').style.display='none';
@@ -1648,6 +1688,23 @@ function clearForm(){
     totValEl.style.color='';
     totValEl.style.fontWeight='';
     totSubEl.textContent='collective hrs';
+  }
+}
+function onProjectSelectChange() {
+  const fProject = document.getElementById('fProject');
+  const fService = document.getElementById('fService');
+  if (!fProject || !fService) return;
+  const pName = fProject.value;
+  fService.innerHTML = '<option value="">— Select Service —</option>';
+  
+  if (pName && PROJECTS_META[pName] && PROJECTS_META[pName].services) {
+    const servicesList = PROJECTS_META[pName].services.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    servicesList.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      fService.appendChild(opt);
+    });
   }
 }
 function onTimeChange(){if(!isHoursOverride)autoCalcHours();updateCalcPreview();}
@@ -1726,7 +1783,9 @@ async function addEntry(){
   const hRaw=document.getElementById('fHours').value;
   const hours=hRaw!==''?parseFloat(hRaw):null;
   const notes=document.getElementById('fNotes').value.trim();
+  const service=document.getElementById('fService').value || '';
   if(!project){await showAlert('Please select a project.', 'Validation Error', 'error');return;}
+  if(document.getElementById('fService').options.length > 1 && !service){await showAlert('Please select a service.', 'Validation Error', 'error');return;}
   if(!date){await showAlert('Please select a date.', 'Validation Error', 'error');return;}
 
   const entryId = editingId || uid();
@@ -1736,6 +1795,7 @@ async function addEntry(){
     id: editingId || null, project, date, checkIn, checkOut, staff, client, status, 
     hoursOverride: isHoursOverride ? (hRaw!==''?parseFloat(hRaw):null) : null, 
     notes,
+    services: service,
     action: editingId ? 'update' : 'create',
     submittedBy: currentUser.username
   };
@@ -1780,6 +1840,8 @@ function editEntry(id){
   editingId=id;isHoursOverride=e.hoursOverride !== null && e.hoursOverride !== undefined && e.hoursOverride > 0;
   // Populate form fields
   document.getElementById('fProject').value=e.project;
+  onProjectSelectChange();
+  document.getElementById('fService').value=e.services||'';
   document.getElementById('fDate').value=e.date;
   document.getElementById('fCheckIn').value=e.checkIn||'';
   document.getElementById('fCheckOut').value=e.checkOut||'';
@@ -1894,13 +1956,14 @@ function exportToCSV() {
   if(sp) fn += `_${sp}`;
   fn += `_${dateStr}.csv`;
 
-  const headers = ["Project", "Date", "Check In", "Check Out", "Staff", "# Staff", "Client", "Duration", "Billed Hours", "Status", "Notes"];
+  const headers = ["Project", "Services", "Date", "Check In", "Check Out", "Staff", "# Staff", "Client", "Duration", "Billed Hours", "Status", "Notes"];
   let csv = headers.join(",") + "\n";
 
   data.forEach(m => {
     m.entries.forEach(e => {
       const row = [
         e.project || "",
+        e.services || "",
         e.date || "",
         fmt12(e.checkIn),
         fmt12(e.checkOut),
@@ -2114,12 +2177,12 @@ table.data td.notes{font-size:7.5pt}
       </table></div>
     </div>
     <table class="data"><thead><tr>
-      <th class="left">Project</th><th>Date</th><th>Check In</th><th>Check Out</th>
+      <th class="left">Project</th><th>Services</th><th>Date</th><th>Check In</th><th>Check Out</th>
       <th>Staff Attended</th><th>Number<br>of Staff</th><th>Client Contact</th>
       <th>Session<br>Duration</th><th>Billed<br>Hours</th><th>Status</th><th>Hours<br>Remaining</th>
       <th class="left">Work Details/Notes</th>
     </tr></thead><tbody>`;
-    if(!entries.length){html+=`<tr><td colspan="12" class="empty">No entries for ${month}</td></tr>`;}
+    if(!entries.length){html+=`<tr><td colspan="13" class="empty">No entries for ${month}</td></tr>`;}
     else{
       let projectRunning = {};
       entries.forEach((e,i)=>{
@@ -2135,8 +2198,10 @@ table.data td.notes{font-size:7.5pt}
         const statusBg={'Planned':'#e8eef6','In Progress':'#fef3c7','Completed':'#d1fae5','On Hold':'#fce7f3','Cancelled':'#fee2e2'};
         const sc2=e.status||'';
         const stStyle=sc2?`background:${statusBg[sc2]||'#f3f4f6'};color:${statusMap[sc2]||'#333'};padding:2px 7px;border-radius:10px;font-size:7pt;font-weight:700;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em`:'color:#888';
+        const cust = PROJECTS_META[pName] && PROJECTS_META[pName].customer ? ` (${PROJECTS_META[pName].customer})` : '';
         html+=`<tr class="${rc}">
-          <td><strong>${esc(e.project)}</strong></td>
+          <td><strong>${esc(pName)}${esc(cust)}</strong></td>
+          <td>${esc(e.services || '—')}</td>
           <td class="ctr">${fmtDate(e.date)}</td>
           <td class="ctr">${fmt12(e.checkIn)}</td>
           <td class="ctr">${fmt12(e.checkOut)}</td>
@@ -2174,6 +2239,10 @@ async function submitCreateProject(){
   const duration = parseInt(document.getElementById('cpDuration').value, 10);
   const allotment = parseFloat(document.getElementById('cpAllotment').value);
   const assigned = document.getElementById('cpAssigned').value.trim();
+  const servicesChecked = [];
+  document.querySelectorAll('input[name="cpServices"]:checked').forEach(cb => {
+    servicesChecked.push(cb.value);
+  });
   if(!projectName || !customer || isNaN(duration) || duration < 1 || isNaN(allotment) || !assigned){
     await showAlert("Please fill out all required fields.", "Validation Error", "error");
     return;
@@ -2183,7 +2252,7 @@ async function submitCreateProject(){
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        projectName, customer, duration, allotment, assigned, startMonth: currentMonth
+        projectName, customer, duration, allotment, assigned, startMonth: currentMonth, services: servicesChecked
       })
     });
     const d = await res.json();
