@@ -270,7 +270,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                 for m in MOCK_DATA['allotments']:
                     if originalName in MOCK_DATA['allotments'][m]:
                         del MOCK_DATA['allotments'][m][originalName]
-                MOCK_DATA['entries'] = [e for e in MOCK_DATA['entries'] if e.get('project') != originalName]
+                # Note: time entries are intentionally preserved so historical logs remain intact.
                 response = {"success": True, "message": "Project deleted successfully."}
             elif action == 'update':
                 name = data.get('name', '').strip()

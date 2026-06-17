@@ -3250,7 +3250,7 @@ async function saveAdminProject() {
 
 async function deleteAdminProject() {
   if (!selectedAdminProject) return;
-  const confirmed = await showConfirm(`Are you sure you want to permanently delete "${selectedAdminProject}"? This will delete all of its allotments and logged time entries.`, "Delete Project");
+  const confirmed = await showConfirm(`Are you sure you want to permanently delete "${selectedAdminProject}"? This will remove all of its allotments, but logged time entries will be preserved.`, "Delete Project");
   if (!confirmed) return;
   
   try {

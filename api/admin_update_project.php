@@ -58,11 +58,7 @@ try {
         $stmt->execute();
         $stmt->close();
 
-        // 3. Delete from time_entries
-        $stmt = $conn->prepare("DELETE FROM time_entries WHERE project = ?");
-        $stmt->bind_param("s", $originalName);
-        $stmt->execute();
-        $stmt->close();
+        // Note: time_entries are intentionally preserved so historical logs remain intact.
         
         // 4. Delete from project_change_requests
         $stmt = $conn->prepare("DELETE FROM project_change_requests WHERE project = ?");
