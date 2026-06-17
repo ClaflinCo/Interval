@@ -67,6 +67,12 @@ MOCK_LOCKOUTS = [
 
 MOCK_REPORTS = []
 MOCK_SIGNUPS = []
+MOCK_USERS = [
+    {"id": 1, "username": "admin", "display_name": "Admin User", "role": "Admin"},
+    {"id": 2, "username": "viewer", "display_name": "Viewer User", "role": "Viewer"},
+    {"id": 3, "username": "supervisor", "display_name": "Supervisor User", "role": "Supervisor"},
+    {"id": 4, "username": "employee", "display_name": "Employee User", "role": "Employee"}
+]
 
 
 class MockHandler(http.server.SimpleHTTPRequestHandler):
@@ -76,7 +82,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            response = {"success": True, "user": {"username": "admin", "display": "Admin User", "role": "Admin"}}
+            response = {"success": True, "user": {"id": 1, "username": "admin", "display": "Admin User", "role": "Admin"}}
             self.wfile.write(json.dumps(response).encode())
         elif self.path.startswith('/api/get_entries.php'):
             self.send_response(200)
@@ -114,6 +120,16 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                 "signups": MOCK_SIGNUPS
             }
             self.wfile.write(json.dumps(response).encode())
+        elif self.path.startswith('/api/admin_users.php'):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            response = {
+                "success": True,
+                "users": MOCK_USERS
+            }
+            self.wfile.write(json.dumps(response).encode())
         else:
             super().do_GET()
 
@@ -132,7 +148,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
         if self.path.startswith('/api/login.php'):
-            response = {"success": True, "user": {"username": "admin", "display": "Admin User", "role": "Admin"}}
+            response = {"success": True, "user": {"id": 1, "username": "admin", "display": "Admin User", "role": "Admin"}}
             self.wfile.write(json.dumps(response).encode())
 
         elif self.path.startswith('/api/admin_lockouts.php'):
@@ -402,9 +418,39 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                     s['status'] = 'Approved' if action == 'approve' else 'Rejected'
                     success = True
                     message = f"Sign up request {action}d successfully."
+                    if action == 'approve':
+                        # Insert into mock users
+                        new_user = {
+                            "id": len(MOCK_USERS) + 1,
+                            "username": s['username'],
+                            "display_name": s['username'],
+                            "role": "Viewer"
+                        }
+                        MOCK_USERS.append(new_user)
                     break
             
             response = {"success": success, "message": message}
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path.startswith('/api/admin_users.php'):
+            user_id = int(data.get('user_id', 0))
+            new_role = data.get('role', '')
+            
+            if user_id == 1:
+                response = {"success": False, "message": "You cannot change your own role."}
+            else:
+                success = False
+                message = "User not found."
+                if user_id > 0 and new_role in ['Admin', 'Supervisor', 'Employee', 'Viewer']:
+                    for u in MOCK_USERS:
+                        if u['id'] == user_id:
+                            u['role'] = new_role
+                            success = True
+                            message = "User role updated successfully."
+                            break
+                else:
+                    message = "Invalid parameters."
+                response = {"success": success, "message": message}
             self.wfile.write(json.dumps(response).encode())
             
         else:

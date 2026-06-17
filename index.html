@@ -426,13 +426,19 @@ tbody td{padding:10px 13px;vertical-align:middle}
 
   <!-- ADMIN SETTINGS PANEL -->
   <aside class="settings-panel" id="adminSettingsPanel">
-    <div class="notif-panel-header" style="background:#f0f4f8; border-bottom:1.5px solid var(--border);">
-      <span class="notif-panel-title" style="font-weight:700; color:var(--navy);">Admin Settings</span>
-      <div class="notif-panel-actions">
-        <button class="close-notif-btn" onclick="toggleAdminSettingsPanel()">✕</button>
+    <!-- Main Settings View -->
+    <div id="adminSettingsMainView" style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+      <div class="notif-panel-header" style="background:#f0f4f8; border-bottom:1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+        <span class="notif-panel-title" style="font-weight:700; color:var(--navy);">Admin Settings</span>
+        <div class="notif-panel-actions">
+          <button class="close-notif-btn" onclick="toggleAdminSettingsPanel()">✕</button>
+        </div>
       </div>
-    </div>
-    <div class="notif-list" style="padding:22px 16px; overflow-y:auto;">
+      <div class="notif-list" style="padding:22px 16px; overflow-y:auto; flex: 1;">
+        <button class="btn btn-navy" style="width: 100%; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem;" onclick="showAdvancedSettingsView()">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Advanced Settings
+        </button>
       <!-- Lockout Management Section (hidden if there are no lockouts) -->
       <div id="lockoutManagerSection" style="display:none;">
         <h3 style="font-size:0.9rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; font-weight:700;">
@@ -549,6 +555,65 @@ tbody td{padding:10px 13px;vertical-align:middle}
       <!-- Placeholder when no signup requests -->
       <div id="noSignupRequestsPlaceholder" style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem;display:none;">
         No pending sign up requests.
+      </div>
+    </div>
+    </div>
+
+    <!-- Advanced Settings View -->
+    <div id="adminSettingsAdvancedView" style="display: none; flex-direction: column; height: 100%; width: 100%;">
+      <div class="notif-panel-header" style="background:#f0f4f8; border-bottom:1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+        <button class="btn btn-ghost btn-sm" onclick="showMainSettingsView()" style="padding: 4px 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; color: var(--navy); font-weight: 600; background: none; border: none; cursor: pointer;">
+          ← Back
+        </button>
+        <span class="notif-panel-title" style="font-weight:700; color:var(--navy);">Advanced Settings</span>
+        <div class="notif-panel-actions">
+          <button class="close-notif-btn" onclick="toggleAdminSettingsPanel()">✕</button>
+        </div>
+      </div>
+      <div class="notif-list" style="padding:22px 16px; overflow-y:auto; flex: 1;">
+        <!-- Change User Role Feature Section -->
+        <div>
+          <h3 style="font-size:0.9rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; font-weight:700;">
+            Change User Role
+          </h3>
+          <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:16px;">
+            Select a user to view their current role, then choose a new role to assign to their account.
+          </p>
+          
+          <div style="background:#f8f9fa; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+            <div class="fg-login" style="margin-bottom: 14px;">
+              <label style="font-size: 0.72rem; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary); display: block; text-transform: uppercase; letter-spacing: .09em;">Select User</label>
+              <select id="advUserSelect" onchange="onAdvUserChange()" style="width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--ink); font-size: 0.9rem; font-family: inherit;">
+                <option value="">Choose a user...</option>
+              </select>
+            </div>
+            
+            <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
+              <span style="color: var(--text-secondary); font-weight: 600;">Current Role:</span>
+              <span id="advUserCurrentRole" style="font-weight: 700; color: var(--navy);">—</span>
+            </div>
+            
+            <div class="fg-login" style="margin-bottom: 16px;">
+              <label style="font-size: 0.72rem; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary); display: block; text-transform: uppercase; letter-spacing: .09em;">New Role</label>
+              <select id="advRoleSelect" style="width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--ink); font-size: 0.9rem; font-family: inherit;">
+                <option value="">Choose new role...</option>
+                <option value="Admin">Admin</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="Employee">Employee</option>
+                <option value="Viewer">Viewer</option>
+              </select>
+            </div>
+            
+            <div id="advUserRoleErr" style="color: var(--color-error); font-size: 0.8rem; margin-bottom: 12px; display: none; text-align: center;"></div>
+            
+            <button class="btn btn-navy" id="btnUpdateUserRole" onclick="updateUserRole()" style="width: 100%; padding: 10px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 6px; cursor: pointer;">
+              Update Role
+            </button>
+            <div id="advUserRoleSpinnerContainer" class="login-loading-container" style="display: none; justify-content: center; margin-top: 10px;">
+              <div class="login-spinner" style="width: 20px; height: 20px; border-width: 2.5px;"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </aside>
@@ -1032,7 +1097,7 @@ function getESTDate() {
 
 let currentMonth=MONTHS[getESTDate().getMonth()],currentUser=null,state={},notifications=[],pending=[],
     deleteTarget=null,editingId=null,isHoursOverride=false,notifPanelOpen=false,adminSettingsPanelOpen=false,exportType='xlsx',
-    expandedNotifId=null;
+    expandedNotifId=null,loadedAdminUsers=[];
 
 // ═══════════════════════════════════════════════════
 //  HELPERS
@@ -1587,6 +1652,132 @@ function toggleAdminSettingsPanel(){
   if(adminSettingsPanelOpen && notifPanelOpen) {
     notifPanelOpen = false;
     document.getElementById('notifPanel').classList.remove('open');
+  }
+  if (!adminSettingsPanelOpen) {
+    showMainSettingsView();
+  }
+}
+
+function showMainSettingsView() {
+  document.getElementById('adminSettingsAdvancedView').style.display = 'none';
+  document.getElementById('adminSettingsMainView').style.display = 'flex';
+}
+
+async function showAdvancedSettingsView() {
+  document.getElementById('adminSettingsMainView').style.display = 'none';
+  document.getElementById('adminSettingsAdvancedView').style.display = 'flex';
+  
+  // Reset fields
+  document.getElementById('advUserSelect').innerHTML = '<option value="">Choose a user...</option>';
+  document.getElementById('advUserCurrentRole').textContent = '—';
+  document.getElementById('advRoleSelect').value = '';
+  document.getElementById('advUserRoleErr').style.display = 'none';
+  
+  try {
+    const res = await fetch('api/admin_users.php');
+    const d = await res.json();
+    if (d.success) {
+      loadedAdminUsers = d.users || [];
+      const select = document.getElementById('advUserSelect');
+      loadedAdminUsers.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.id;
+        opt.textContent = `${u.username} (${u.display_name || u.username})`;
+        select.appendChild(opt);
+      });
+    } else {
+      await showAlert("Failed to load users: " + (d.message || "Unknown error"), "Error", "error");
+    }
+  } catch (e) {
+    await showAlert("Network error while loading users.", "Error", "error");
+  }
+}
+
+function onAdvUserChange() {
+  const userId = parseInt(document.getElementById('advUserSelect').value, 10);
+  const currentRoleSpan = document.getElementById('advUserCurrentRole');
+  
+  if (!userId) {
+    currentRoleSpan.textContent = '—';
+    return;
+  }
+  
+  const user = loadedAdminUsers.find(u => u.id === userId);
+  if (user) {
+    currentRoleSpan.textContent = user.role || '—';
+  } else {
+    currentRoleSpan.textContent = '—';
+  }
+}
+
+async function updateUserRole() {
+  const userId = parseInt(document.getElementById('advUserSelect').value, 10);
+  const newRole = document.getElementById('advRoleSelect').value;
+  const errDiv = document.getElementById('advUserRoleErr');
+  const btn = document.getElementById('btnUpdateUserRole');
+  const spinner = document.getElementById('advUserRoleSpinnerContainer');
+  
+  errDiv.style.display = 'none';
+  
+  if (!userId) {
+    errDiv.textContent = "Please select a user.";
+    errDiv.style.display = 'block';
+    return;
+  }
+  
+  if (!newRole) {
+    errDiv.textContent = "Please choose a new role.";
+    errDiv.style.display = 'block';
+    return;
+  }
+  
+  const user = loadedAdminUsers.find(u => u.id === userId);
+  if (user && user.role === newRole) {
+    errDiv.textContent = `User already has the role of ${newRole}.`;
+    errDiv.style.display = 'block';
+    return;
+  }
+  
+  if (currentUser && userId === currentUser.id) {
+    errDiv.textContent = "You cannot change your own role.";
+    errDiv.style.display = 'block';
+    return;
+  }
+  
+  // Disable fields and show loading
+  document.getElementById('advUserSelect').disabled = true;
+  document.getElementById('advRoleSelect').disabled = true;
+  btn.style.display = 'none';
+  spinner.style.display = 'flex';
+  
+  try {
+    const res = await fetch('api/admin_users.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, role: newRole })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('success', 'Role Updated', `Role for "${user.username}" updated to "${newRole}".`, null);
+      
+      // Update local cache
+      if (user) user.role = newRole;
+      document.getElementById('advUserCurrentRole').textContent = newRole;
+      document.getElementById('advRoleSelect').value = '';
+      
+      await showAlert(`Successfully updated role for ${user.username} to ${newRole}.`, "Success", "success");
+    } else {
+      errDiv.textContent = d.message || "Failed to update role.";
+      errDiv.style.display = 'block';
+    }
+  } catch (e) {
+    errDiv.textContent = "Network error occurred.";
+    errDiv.style.display = 'block';
+  } finally {
+    document.getElementById('advUserSelect').disabled = false;
+    document.getElementById('advRoleSelect').disabled = false;
+    btn.style.display = 'block';
+    spinner.style.display = 'none';
   }
 }
 async function pushNotif(type,title,msg,month){
