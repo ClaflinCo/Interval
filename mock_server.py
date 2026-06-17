@@ -24,7 +24,8 @@ MOCK_DATA = {
             "staff": "John",
             "client": "Client A",
             "status": "Completed",
-            "notes": "Work on vCIO"
+            "notes": "Work on vCIO",
+            "submitted_by": "admin"
         },
         {
             "id": "2",
@@ -35,7 +36,8 @@ MOCK_DATA = {
             "staff": "Jane",
             "client": "Client B",
             "status": "Completed",
-            "notes": "Work on Network Admin"
+            "notes": "Work on Network Admin",
+            "submitted_by": "employee"
         }
     ],
     "pending": [],
@@ -155,6 +157,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path.startswith('/api/save_entry.php'):
             action = data.get('action')
             entry_id = str(data.get('id'))
+            submitted_by = data.get('submittedBy', 'admin')
             
             entry = {
                 "id": entry_id,
@@ -165,13 +168,16 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                 "staff": data.get('staff', ''),
                 "client": data.get('client', ''),
                 "status": data.get('status', ''),
-                "notes": data.get('notes', '')
+                "notes": data.get('notes', ''),
+                "submitted_by": submitted_by
             }
             
             if action == 'update':
                 updated = False
                 for i, e in enumerate(MOCK_DATA['entries']):
                     if str(e['id']) == entry_id:
+                        orig_submitted_by = e.get('submitted_by', 'admin')
+                        entry['submitted_by'] = orig_submitted_by
                         MOCK_DATA['entries'][i] = entry
                         updated = True
                         break

@@ -2040,7 +2040,14 @@ function renderMonth(){
     actionsDiv.className = 'row-actions';
     
     const isViewer = currentUser && (currentUser.role === 'Viewer' || currentUser.role === 'viewer');
-    if (!isViewer) {
+    const isEmployee = currentUser && (currentUser.role === 'Employee' || currentUser.role === 'employee');
+    const isOwner = currentUser && e.submitted_by === currentUser.username;
+    
+    // Admins and Supervisors can edit/delete everything.
+    // Employees can edit/delete only if they are the creator.
+    const canEditDelete = !isViewer && (!isEmployee || isOwner);
+    
+    if (canEditDelete) {
       const editBtn = document.createElement('button');
       editBtn.className = 'btn btn-outline btn-sm';
       editBtn.textContent = 'Edit';
@@ -2450,6 +2457,11 @@ function closeSuccessModal(){
 }
 function editEntry(id){
   const e=state[currentMonth].entries.find(x=>String(x.id)===String(id));if(!e)return;
+  const isEmployee = currentUser && (currentUser.role === 'Employee' || currentUser.role === 'employee');
+  if (isEmployee && e.submitted_by !== currentUser.username) {
+    showAlert("You can only edit your own entries.", "Permission Denied", "error");
+    return;
+  }
   editingId=id;isHoursOverride=e.hoursOverride !== null && e.hoursOverride !== undefined && e.hoursOverride > 0;
   // Populate form fields
   document.getElementById('fProject').value=e.project;
@@ -2487,6 +2499,14 @@ async function confirmDelete(){
   
   const idToDel = deleteTarget;
   const e=state[currentMonth].entries.find(x=>String(x.id)===String(idToDel));
+  
+  const isEmployee = currentUser && (currentUser.role === 'Employee' || currentUser.role === 'employee');
+  if (e && isEmployee && e.submitted_by !== currentUser.username) {
+    await showAlert("You can only delete your own entries.", "Permission Denied", "error");
+    closeDeleteModal();
+    return;
+  }
+  
   const name=e?e.project:'Entry';
   try {
     const res = await fetch('api/update_entry.php', {
