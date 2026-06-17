@@ -50,7 +50,7 @@ $userCheck->execute();
 $userCheckRes = $userCheck->get_result();
 if ($userCheckRes->num_rows > 0) {
     $userCheck->close();
-    echo json_encode(["success" => false, "message" => "Username is already registered."]);
+    echo json_encode(["success" => false, "message" => "This username is unavailable"]);
     exit;
 }
 $userCheck->close();

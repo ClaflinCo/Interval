@@ -370,6 +370,10 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                 response = {"success": False, "message": "All fields are required."}
             elif password != passwordConfirm:
                 response = {"success": False, "message": "Passwords do not match."}
+            elif username.lower() in ["admin", "viewer", "supervisor", "employee"]:
+                response = {"success": False, "message": "This username is unavailable"}
+            elif any(s['username'].lower() == username.lower() for s in MOCK_SIGNUPS):
+                response = {"success": False, "message": "A registration request for this username is already pending review."}
             else:
                 signup = {
                     "id": len(MOCK_SIGNUPS) + 1,
