@@ -64,6 +64,8 @@ MOCK_LOCKOUTS = [
 ]
 
 MOCK_REPORTS = []
+MOCK_SIGNUPS = []
+
 
 class MockHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -100,8 +102,19 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                 "reports": MOCK_REPORTS
             }
             self.wfile.write(json.dumps(response).encode())
+        elif self.path.startswith('/api/admin_signups.php'):
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            response = {
+                "success": True,
+                "signups": MOCK_SIGNUPS
+            }
+            self.wfile.write(json.dumps(response).encode())
         else:
             super().do_GET()
+
 
     def do_POST(self):
         content_length = int(self.headers.get('Content-Length', 0))
@@ -347,9 +360,50 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
             response = {"success": True, "message": "Report resolved successfully."}
             self.wfile.write(json.dumps(response).encode())
             
+        elif self.path.startswith('/api/signup.php'):
+            email = data.get('email', '')
+            username = data.get('username', '')
+            password = data.get('password', '')
+            passwordConfirm = data.get('passwordConfirm', '')
+            
+            if not email or not username or not password or not passwordConfirm:
+                response = {"success": False, "message": "All fields are required."}
+            elif password != passwordConfirm:
+                response = {"success": False, "message": "Passwords do not match."}
+            else:
+                signup = {
+                    "id": len(MOCK_SIGNUPS) + 1,
+                    "email": email,
+                    "username": username,
+                    "password_hash": "$2y$10$abcdefghijklmnopqrstuvwx",
+                    "ip_address": "127.0.0.1",
+                    "status": "Pending",
+                    "created_at": "2026-06-17 09:00:00"
+                }
+                MOCK_SIGNUPS.insert(0, signup)
+                response = {"success": True, "message": "Sign up request submitted successfully."}
+            self.wfile.write(json.dumps(response).encode())
+
+        elif self.path.startswith('/api/admin_signups.php'):
+            signup_id = int(data.get('id', 0))
+            action = data.get('action', '')
+            
+            success = False
+            message = "Sign up request not found."
+            for s in MOCK_SIGNUPS:
+                if s['id'] == signup_id:
+                    s['status'] = 'Approved' if action == 'approve' else 'Rejected'
+                    success = True
+                    message = f"Sign up request {action}d successfully."
+                    break
+            
+            response = {"success": success, "message": message}
+            self.wfile.write(json.dumps(response).encode())
+            
         else:
             response = {"success": True, "status": "success"}
             self.wfile.write(json.dumps(response).encode())
+
 
 if __name__ == '__main__':
     print(f"Mock server running at http://localhost:{PORT}")

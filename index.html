@@ -293,13 +293,68 @@ tbody td{padding:10px 13px;vertical-align:middle}
     </div>
     <h1 class="login-title">Interval</h1>
     <p class="login-sub">Sign in to access the portal</p>
-    <div class="fg-login"><label>Username</label><input type="text" id="loginUser" placeholder="Enter your username" maxlength="15" autocomplete="username"></div>
-    <div class="fg-login"><label>Password</label><input type="password" id="loginPass" placeholder="Enter your password" maxlength="45" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div class="login-err" id="loginErr">Invalid username or password. Please try again.</div>
-    <button class="btn-login" onclick="doLogin()">Sign In</button>
-    <div id="loginSpinnerContainer" class="login-loading-container">
-      <div class="login-spinner"></div>
+    
+    <!-- 1. Landing View -->
+    <div id="loginLandingView">
+      <button class="btn-login" onclick="showLoginView()" style="margin-bottom: 14px; width: 100%;">Login</button>
+      <button class="btn-login btn-outline" style="background: white; border: 1.5px solid var(--navy); color: var(--navy); width: 100%;" onclick="showSignupView()">Sign Up</button>
     </div>
+
+    <!-- 2. Login Form View -->
+    <div id="loginFormView" style="display: none;">
+      <div class="fg-login">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Enter your username" maxlength="15" autocomplete="username">
+      </div>
+      <div class="fg-login" style="position: relative;">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter your password" maxlength="45" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right: 46px;">
+        <button type="button" onclick="togglePasswordVisibility('loginPass', this)" style="position: absolute; right: 10px; bottom: 8px; background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1.1rem; padding: 4px;" title="Toggle Password Visibility">👁️</button>
+      </div>
+      <div class="login-err" id="loginErr">Invalid username or password. Please try again.</div>
+      <button class="btn-login" onclick="doLogin()">Sign In</button>
+      <div id="loginSpinnerContainer" class="login-loading-container">
+        <div class="login-spinner"></div>
+      </div>
+      <a href="#" onclick="showLandingView()" style="display: block; text-align: center; margin-top: 18px; color: var(--navy); font-size: 0.85rem; text-decoration: none; font-weight: 600;">Back to Home</a>
+    </div>
+
+    <!-- 3. Sign Up Form View -->
+    <div id="signupFormView" style="display: none;">
+      <div class="fg-login">
+        <label>Work Email</label>
+        <input type="email" id="signupEmail" placeholder="Enter your work email" maxlength="100" autocomplete="email">
+      </div>
+      <div class="fg-login">
+        <label>Username (First Initial Last Name)</label>
+        <input type="text" id="signupUser" placeholder="e.g., jdoe" maxlength="15" autocomplete="username">
+      </div>
+      <div class="fg-login" style="position: relative;">
+        <label>Password</label>
+        <input type="password" id="signupPass" placeholder="Create a password" maxlength="45" autocomplete="new-password" style="padding-right: 46px;">
+        <button type="button" onclick="togglePasswordVisibility('signupPass', this)" style="position: absolute; right: 10px; bottom: 8px; background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1.1rem; padding: 4px;" title="Toggle Password Visibility">👁️</button>
+      </div>
+      <div class="fg-login" style="position: relative;">
+        <label>Confirm Password</label>
+        <input type="password" id="signupPassConfirm" placeholder="Confirm your password" maxlength="45" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()" style="padding-right: 46px;">
+        <button type="button" onclick="togglePasswordVisibility('signupPassConfirm', this)" style="position: absolute; right: 10px; bottom: 8px; background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1.1rem; padding: 4px;" title="Toggle Password Visibility">👁️</button>
+      </div>
+      <div class="login-err" id="signupErr"></div>
+      <button class="btn-login" id="btnSignupSubmit" onclick="doSignup()">Submit Request</button>
+      <div id="signupSpinnerContainer" class="login-loading-container">
+        <div class="login-spinner"></div>
+      </div>
+      <a href="#" onclick="showLandingView()" style="display: block; text-align: center; margin-top: 18px; color: var(--navy); font-size: 0.85rem; text-decoration: none; font-weight: 600;">Back to Home</a>
+    </div>
+
+    <!-- 4. Sign Up Success View -->
+    <div id="signupSuccessView" style="display: none; text-align: center;">
+      <p style="font-size: 1.1rem; color: var(--navy); margin-bottom: 24px; line-height: 1.6; font-weight: 600;">
+        Thank you for signing up.<br>An admin will review your account.
+      </p>
+      <button class="btn-login" onclick="showLandingView()" style="width: 100%;">Back to Home</button>
+    </div>
+
   </div>
 </div>
 
@@ -466,8 +521,38 @@ tbody td{padding:10px 13px;vertical-align:middle}
       <div id="noAdminReportsPlaceholder" style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem;display:none;">
         No pending help reports.
       </div>
+
+      <!-- Signup Request Management Section -->
+      <div id="signupRequestManagerSection" style="margin-top:25px; border-top:1.5px solid var(--border); padding-top:20px; display:none;">
+        <h3 style="font-size:0.9rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; font-weight:700;">
+          Pending Sign Up Requests
+        </h3>
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:15px;">
+          The following users have requested registration. Approving them will create their account.
+        </p>
+        <div class="table-wrap" style="border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;">
+          <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+            <thead>
+              <tr style="background:#f8f9fa;">
+                <th style="padding:10px 6px; text-align:left; font-size:0.7rem; letter-spacing:0.03em; width:30%;">Email</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:25%;">Username</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:20%;">IP / Time</th>
+                <th style="padding:10px 6px; text-align:center; font-size:0.7rem; letter-spacing:0.03em; width:25%;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="signupRequestTableBody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Placeholder when no signup requests -->
+      <div id="noSignupRequestsPlaceholder" style="padding:32px 20px;text-align:center;color:var(--ink2);font-size:.85rem;display:none;">
+        No pending sign up requests.
+      </div>
     </div>
   </aside>
+
 
   <div class="main-layout">
     <main class="content">
@@ -1062,11 +1147,172 @@ function getActiveProjectsForMonth(m) {
 // ═══════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════
+function showLandingView() {
+  document.getElementById('loginLandingView').style.display = 'block';
+  document.getElementById('loginFormView').style.display = 'none';
+  document.getElementById('signupFormView').style.display = 'none';
+  document.getElementById('signupSuccessView').style.display = 'none';
+  
+  document.querySelector('.login-title').textContent = 'Interval';
+  document.querySelector('.login-sub').textContent = 'Sign in to access the portal';
+}
+
+function showLoginView() {
+  document.getElementById('loginLandingView').style.display = 'none';
+  document.getElementById('loginFormView').style.display = 'block';
+  document.getElementById('signupFormView').style.display = 'none';
+  document.getElementById('signupSuccessView').style.display = 'none';
+  
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('loginUser').disabled = false;
+  document.getElementById('loginPass').disabled = false;
+  resetPasswordVisibility('loginPass');
+  
+  const btn = document.querySelector('#loginFormView .btn-login');
+  if (btn) btn.style.display = 'block';
+  document.getElementById('loginSpinnerContainer').style.display = 'none';
+  
+  document.querySelector('.login-title').textContent = 'Sign In';
+  document.querySelector('.login-sub').textContent = 'Enter your credentials below';
+}
+
+function showSignupView() {
+  document.getElementById('loginLandingView').style.display = 'none';
+  document.getElementById('loginFormView').style.display = 'none';
+  document.getElementById('signupFormView').style.display = 'block';
+  document.getElementById('signupSuccessView').style.display = 'none';
+  
+  document.getElementById('signupEmail').value = '';
+  document.getElementById('signupUser').value = '';
+  document.getElementById('signupPass').value = '';
+  document.getElementById('signupPassConfirm').value = '';
+  document.getElementById('signupErr').style.display = 'none';
+  document.getElementById('signupEmail').disabled = false;
+  document.getElementById('signupUser').disabled = false;
+  document.getElementById('signupPass').disabled = false;
+  document.getElementById('signupPassConfirm').disabled = false;
+  resetPasswordVisibility('signupPass');
+  resetPasswordVisibility('signupPassConfirm');
+  
+  document.getElementById('btnSignupSubmit').style.display = 'block';
+  document.getElementById('signupSpinnerContainer').style.display = 'none';
+  
+  document.querySelector('.login-title').textContent = 'Sign Up';
+  document.querySelector('.login-sub').textContent = 'Create your account request';
+}
+
+function showSignupSuccessView() {
+  document.getElementById('loginLandingView').style.display = 'none';
+  document.getElementById('loginFormView').style.display = 'none';
+  document.getElementById('signupFormView').style.display = 'none';
+  document.getElementById('signupSuccessView').style.display = 'block';
+  
+  document.querySelector('.login-title').textContent = 'Request Sent';
+  document.querySelector('.login-sub').textContent = 'Account pending review';
+}
+
+function togglePasswordVisibility(inputId, toggleBtn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    toggleBtn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    toggleBtn.textContent = '👁️';
+  }
+}
+
+function resetPasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.type = 'password';
+  const parent = input.parentElement;
+  if (parent) {
+    const btn = parent.querySelector('button');
+    if (btn) btn.textContent = '👁️';
+  }
+}
+
+async function doSignup() {
+  const email = document.getElementById('signupEmail').value.trim();
+  const username = document.getElementById('signupUser').value.trim();
+  const password = document.getElementById('signupPass').value;
+  const passwordConfirm = document.getElementById('signupPassConfirm').value;
+  const err = document.getElementById('signupErr');
+  const btn = document.getElementById('btnSignupSubmit');
+  const spinnerContainer = document.getElementById('signupSpinnerContainer');
+
+  if (!email || !username || !password || !passwordConfirm) {
+    err.textContent = 'Please fill out all fields';
+    err.style.display = 'block';
+    return;
+  }
+
+  if (!email.includes('@')) {
+    err.textContent = 'Please enter a valid work email';
+    err.style.display = 'block';
+    return;
+  }
+
+  if (password !== passwordConfirm) {
+    err.textContent = 'Passwords do not match';
+    err.style.display = 'block';
+    return;
+  }
+
+  if (username.length < 3) {
+    err.textContent = 'Username must be at least 3 characters long';
+    err.style.display = 'block';
+    return;
+  }
+
+  err.style.display = 'none';
+  document.getElementById('signupEmail').disabled = true;
+  document.getElementById('signupUser').disabled = true;
+  document.getElementById('signupPass').disabled = true;
+  document.getElementById('signupPassConfirm').disabled = true;
+  btn.style.display = 'none';
+  spinnerContainer.style.display = 'flex';
+
+  try {
+    const res = await fetch('api/signup.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, username, password, passwordConfirm })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showSignupSuccessView();
+    } else {
+      err.textContent = data.message || 'Signup request failed';
+      err.style.display = 'block';
+      document.getElementById('signupEmail').disabled = false;
+      document.getElementById('signupUser').disabled = false;
+      document.getElementById('signupPass').disabled = false;
+      document.getElementById('signupPassConfirm').disabled = false;
+      btn.style.display = 'block';
+      spinnerContainer.style.display = 'none';
+    }
+  } catch (e) {
+    err.textContent = 'Connection error';
+    err.style.display = 'block';
+    document.getElementById('signupEmail').disabled = false;
+    document.getElementById('signupUser').disabled = false;
+    document.getElementById('signupPass').disabled = false;
+    document.getElementById('signupPassConfirm').disabled = false;
+    btn.style.display = 'block';
+    spinnerContainer.style.display = 'none';
+  }
+}
+
 async function doLogin(){
   const u=document.getElementById('loginUser').value.trim();
   const p=document.getElementById('loginPass').value;
   const err=document.getElementById('loginErr');
-  const btn=document.querySelector('.btn-login');
+  const btn=document.querySelector('#loginFormView .btn-login');
   const spinnerContainer = document.getElementById('loginSpinnerContainer');
   
   if (!u || !p) {
@@ -1075,12 +1321,10 @@ async function doLogin(){
     return;
   }
 
-  // Hide button, show spinner
   btn.style.display = 'none';
   spinnerContainer.style.display = 'flex';
   err.style.display = 'none';
   
-  // Disable inputs during load
   document.getElementById('loginUser').disabled = true;
   document.getElementById('loginPass').disabled = true;
 
@@ -1108,7 +1352,6 @@ async function doLogin(){
     } else {
       err.textContent = data.message || 'Invalid credentials';
       err.style.display='block';
-      // Restore UI on failure
       btn.style.display = 'block';
       spinnerContainer.style.display = 'none';
       document.getElementById('loginUser').disabled = false;
@@ -1117,24 +1360,19 @@ async function doLogin(){
   } catch (e) {
     err.textContent = 'Connection error';
     err.style.display='block';
-    // Restore UI on failure
     btn.style.display = 'block';
     spinnerContainer.style.display = 'none';
     document.getElementById('loginUser').disabled = false;
     document.getElementById('loginPass').disabled = false;
   }
 }
+
 async function doLogout(){
   try { await fetch('api/logout.php'); } catch(e) {}
   currentUser=null;
   document.getElementById('app').style.display='none';
   document.getElementById('loginPage').style.display='flex';
-  document.getElementById('loginUser').value='';
-  document.getElementById('loginPass').value='';
-  document.getElementById('loginUser').disabled = false;
-  document.getElementById('loginPass').disabled = false;
-  document.querySelector('.btn-login').style.display = 'block';
-  document.getElementById('loginSpinnerContainer').style.display = 'none';
+  showLandingView();
   if(notifPanelOpen)toggleNotifPanel();
   if(adminSettingsPanelOpen) {
     adminSettingsPanelOpen = false;
@@ -1144,6 +1382,7 @@ async function doLogout(){
   if (btn) btn.style.display = 'none';
   const helpBtn = document.getElementById('helpBtn');
   if (helpBtn) helpBtn.style.display = 'none';
+
   
   // Close and clear the entry form if open
   const form=document.getElementById('addForm');
@@ -2939,20 +3178,24 @@ async function loadLockouts() {
   }
   if (btn) btn.style.display = 'inline-block';
   try {
-    const [lockoutRes, requestRes, reportRes] = await Promise.all([
+    const [lockoutRes, requestRes, reportRes, signupRes] = await Promise.all([
       fetch('api/admin_lockouts.php?_=' + Date.now(), { cache: 'no-store' }),
       fetch('api/admin_change_requests.php?_=' + Date.now(), { cache: 'no-store' }),
-      fetch('api/admin_reports.php?_=' + Date.now(), { cache: 'no-store' })
+      fetch('api/admin_reports.php?_=' + Date.now(), { cache: 'no-store' }),
+      fetch('api/admin_signups.php?_=' + Date.now(), { cache: 'no-store' })
     ]);
-    const [lockoutData, requestData, reportData] = await Promise.all([
+    const [lockoutData, requestData, reportData, signupData] = await Promise.all([
       lockoutRes.json(),
       requestRes.json(),
-      reportRes.json()
+      reportRes.json(),
+      signupRes.json()
     ]);
     
     let totalLockouts = 0;
     let totalPendingRequests = 0;
     let totalPendingReports = 0;
+    let totalPendingSignups = 0;
+
     
     // 1. Render Lockouts
     if (lockoutData.success) {
@@ -3180,8 +3423,84 @@ async function loadLockouts() {
       }
     }
 
+    // 4. Render Signup Requests
+    if (signupData.success) {
+      const allSignups = signupData.signups || [];
+      const pendingSignups = allSignups.filter(s => s.status === 'Pending');
+      totalPendingSignups = pendingSignups.length;
+      
+      const signSection = document.getElementById('signupRequestManagerSection');
+      const signPlaceholder = document.getElementById('noSignupRequestsPlaceholder');
+      const signTbody = document.getElementById('signupRequestTableBody');
+      
+      if (pendingSignups.length > 0) {
+        signTbody.innerHTML = '';
+        pendingSignups.forEach(s => {
+          const tr = document.createElement('tr');
+          
+          const tdEmail = document.createElement('td');
+          tdEmail.style.padding = '10px 6px';
+          tdEmail.style.textAlign = 'left';
+          tdEmail.style.fontWeight = '600';
+          tdEmail.style.whiteSpace = 'normal';
+          tdEmail.style.overflowWrap = 'break-word';
+          tdEmail.style.wordBreak = 'normal';
+          tdEmail.textContent = s.email || '—';
+          tr.appendChild(tdEmail);
+          
+          const tdUser = document.createElement('td');
+          tdUser.style.padding = '10px 6px';
+          tdUser.style.textAlign = 'center';
+          tdUser.style.whiteSpace = 'normal';
+          tdUser.style.overflowWrap = 'break-word';
+          tdUser.style.wordBreak = 'normal';
+          tdUser.textContent = s.username || '—';
+          tr.appendChild(tdUser);
+          
+          const tdMeta = document.createElement('td');
+          tdMeta.style.padding = '10px 6px';
+          tdMeta.style.textAlign = 'center';
+          tdMeta.style.fontSize = '0.75rem';
+          tdMeta.style.whiteSpace = 'normal';
+          tdMeta.innerHTML = `<span style="font-weight:600;">${s.ip_address}</span><br><span style="color:var(--text-secondary);font-size:0.7rem;">${s.created_at}</span>`;
+          tr.appendChild(tdMeta);
+          
+          const tdActions = document.createElement('td');
+          tdActions.style.padding = '10px 6px';
+          tdActions.style.textAlign = 'center';
+          tdActions.style.whiteSpace = 'nowrap';
+          
+          const btnApprove = document.createElement('button');
+          btnApprove.className = 'btn btn-navy btn-sm';
+          btnApprove.textContent = 'Approve';
+          btnApprove.style.padding = '3px 8px';
+          btnApprove.style.fontSize = '0.72rem';
+          btnApprove.style.marginRight = '4px';
+          btnApprove.addEventListener('click', () => resolveSignupRequest(s.id, 'approve'));
+          
+          const btnReject = document.createElement('button');
+          btnReject.className = 'btn btn-outline btn-sm';
+          btnReject.textContent = 'Reject';
+          btnReject.style.padding = '3px 8px';
+          btnReject.style.fontSize = '0.72rem';
+          btnReject.addEventListener('click', () => resolveSignupRequest(s.id, 'reject'));
+          
+          tdActions.appendChild(btnApprove);
+          tdActions.appendChild(btnReject);
+          tr.appendChild(tdActions);
+          
+          signTbody.appendChild(tr);
+        });
+        if (signSection) signSection.style.display = 'block';
+        if (signPlaceholder) signPlaceholder.style.display = 'none';
+      } else {
+        if (signSection) signSection.style.display = 'none';
+        if (signPlaceholder) signPlaceholder.style.display = 'block';
+      }
+    }
+
     // Update Badge Count
-    const totalAlerts = totalLockouts + totalPendingRequests + totalPendingReports;
+    const totalAlerts = totalLockouts + totalPendingRequests + totalPendingReports + totalPendingSignups;
     if (lc) {
       lc.textContent = totalAlerts;
       lc.style.display = totalAlerts > 0 ? 'inline-block' : 'none';
@@ -3191,6 +3510,29 @@ async function loadLockouts() {
     console.error('Failed to load settings data:', err);
   }
 }
+
+async function resolveSignupRequest(id, action) {
+  const confirmed = await showConfirm(`Are you sure you want to ${action} this sign up request?`, `${action.toUpperCase()} Sign Up`);
+  if (!confirmed) return;
+  
+  try {
+    const res = await fetch('api/admin_signups.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('info', 'Sign Up Request Resolved', `Account request for ID ${id} has been ${action}d.`, null);
+      await loadLockouts();
+    } else {
+      await showAlert("Error: " + (d.message || "Unknown error"), "Action Error", "error");
+    }
+  } catch (err) {
+    await showAlert("Network error while resolving sign up request.", "Connection Error", "error");
+  }
+}
+
 
 async function resolveChangeRequest(id, status) {
   const confirmed = await showConfirm(`Are you sure you want to mark this request as ${status === 'Resolved' ? 'Resolved' : 'Denied'}?`, `${status} Request`);

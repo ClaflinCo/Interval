@@ -108,6 +108,21 @@ $conn->query("
 ");
 log_sync("Checked admin_reports table existence.<br>");
 
+// 2f. Ensure account_requests table structure and constraints
+$conn->query("
+    CREATE TABLE IF NOT EXISTS account_requests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        ip_address VARCHAR(45) NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+");
+log_sync("Checked account_requests table existence.<br>");
+
+
 // Ensure month column is VARCHAR(20)
 $r = $conn->query("SHOW COLUMNS FROM project_allotments LIKE 'month'");
 if ($r && $row = $r->fetch_assoc()) {
