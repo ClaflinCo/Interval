@@ -1670,8 +1670,8 @@ async function showAdvancedSettingsView() {
   // Reset fields
   document.getElementById('advUserSelect').innerHTML = '<option value="">Choose a user...</option>';
   document.getElementById('advUserCurrentRole').textContent = '—';
-  document.getElementById('advRoleSelect').value = '';
   document.getElementById('advUserRoleErr').style.display = 'none';
+  onAdvUserChange();
   
   try {
     const res = await fetch('api/admin_users.php');
@@ -1696,17 +1696,43 @@ async function showAdvancedSettingsView() {
 function onAdvUserChange() {
   const userId = parseInt(document.getElementById('advUserSelect').value, 10);
   const currentRoleSpan = document.getElementById('advUserCurrentRole');
+  const roleSelect = document.getElementById('advRoleSelect');
+  
+  // Clear role options and rebuild
+  roleSelect.innerHTML = '<option value="">Choose new role...</option>';
+  const allRoles = ['Admin', 'Supervisor', 'Employee', 'Viewer'];
   
   if (!userId) {
     currentRoleSpan.textContent = '—';
+    allRoles.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r;
+      opt.textContent = r;
+      roleSelect.appendChild(opt);
+    });
     return;
   }
   
   const user = loadedAdminUsers.find(u => u.id === userId);
   if (user) {
-    currentRoleSpan.textContent = user.role || '—';
+    const currentRole = user.role || '—';
+    currentRoleSpan.textContent = currentRole;
+    allRoles.forEach(r => {
+      if (r !== currentRole) {
+        const opt = document.createElement('option');
+        opt.value = r;
+        opt.textContent = r;
+        roleSelect.appendChild(opt);
+      }
+    });
   } else {
     currentRoleSpan.textContent = '—';
+    allRoles.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r;
+      opt.textContent = r;
+      roleSelect.appendChild(opt);
+    });
   }
 }
 
@@ -1762,8 +1788,7 @@ async function updateUserRole() {
       
       // Update local cache
       if (user) user.role = newRole;
-      document.getElementById('advUserCurrentRole').textContent = newRole;
-      document.getElementById('advRoleSelect').value = '';
+      onAdvUserChange();
       
       await showAlert(`Successfully updated role for ${user.username} to ${newRole}.`, "Success", "success");
     } else {
