@@ -291,9 +291,6 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                         if e.get('project') == originalName:
                             e['project'] = name
                 
-                for m in MOCK_DATA['allotments']:
-                    if name in MOCK_DATA['allotments'][m]:
-                        MOCK_DATA['allotments'][m][name] = allotment
                 
                 if month:
                     if month not in MOCK_DATA['allotments']:

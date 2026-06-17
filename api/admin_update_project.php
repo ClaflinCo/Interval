@@ -133,12 +133,6 @@ try {
             $stmt->close();
         }
 
-        // Keep allotments values matching the updated default allotment in the database across months
-        $stmt = $conn->prepare("UPDATE project_allotments SET allotment = ? WHERE project = ?");
-        $stmt->bind_param("ds", $allotment, $name);
-        $stmt->execute();
-        $stmt->close();
-
         // Ensure the active month's allotment is updated/created
         if (!empty($month)) {
             $stmt = $conn->prepare("INSERT INTO project_allotments (month, project, allotment, updated_by) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allotment = VALUES(allotment), updated_by = VALUES(updated_by)");
