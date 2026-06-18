@@ -113,7 +113,7 @@ $conn->query("
     CREATE TABLE IF NOT EXISTS account_requests (
         id INT AUTO_INCREMENT PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
-        username VARCHAR(100) NOT NULL UNIQUE,
+        username VARCHAR(100) NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         ip_address VARCHAR(45) NOT NULL,
         status VARCHAR(20) NOT NULL DEFAULT 'Pending',
@@ -121,6 +121,17 @@ $conn->query("
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 log_sync("Checked account_requests table existence.<br>");
+
+// Drop the unique constraint on username in account_requests if it exists.
+// Usernames only need to be unique in the active users table — historical
+// account_request records (Approved/Rejected) should not block re-registration.
+$idxCheck = $conn->query("SHOW INDEX FROM account_requests WHERE Key_name = 'username'");
+if ($idxCheck && $idxCheck->num_rows > 0) {
+    $conn->query("ALTER TABLE account_requests DROP INDEX username");
+    log_sync("Dropped unique index on account_requests.username to allow re-registration of previously used usernames.<br>");
+} else {
+    log_sync("No unique index on account_requests.username (correct).<br>");
+}
 
 
 // Ensure month column is VARCHAR(20)
