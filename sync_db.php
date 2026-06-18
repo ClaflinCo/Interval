@@ -260,5 +260,35 @@ foreach ($defaults as $u) {
 }
 */
 
+// 5. Ensure all existing projects have all 12 monthly allotments in project_allotments
+$projRes = $conn->query("SELECT name, customer, duration, assigned, created_by FROM projects");
+if ($projRes) {
+    $MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    $insStmt = $conn->prepare("
+        INSERT INTO project_allotments (month, project, allotment, updated_by, assigned, customer, duration, created_by) 
+        VALUES (?, ?, 0.00, ?, ?, ?, ?, ?) 
+        ON DUPLICATE KEY UPDATE 
+            assigned=VALUES(assigned), 
+            customer=VALUES(customer), 
+            duration=VALUES(duration), 
+            created_by=VALUES(created_by)
+    ");
+    if ($insStmt) {
+        while ($row = $projRes->fetch_assoc()) {
+            $pName = $row['name'];
+            $cust = $row['customer'];
+            $dur = (int)$row['duration'];
+            $ass = $row['assigned'];
+            $cb = $row['created_by'];
+            
+            foreach ($MONTHS as $m) {
+                $insStmt->bind_param("ssssssis", $m, $pName, $cb, $ass, $cust, $dur, $cb);
+                $insStmt->execute();
+            }
+        }
+        $insStmt->close();
+    }
+}
+
 log_sync("<br>=== DATABASE SYNC COMPLETE ===");
 ?>

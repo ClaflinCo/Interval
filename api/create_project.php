@@ -116,11 +116,15 @@ try {
     $projStmt->close();
 
     // Prepare statement to insert/update project allotments
-    $sql = "INSERT INTO project_allotments (month, project, allotment, updated_by) 
-            VALUES (?, ?, ?, ?) 
+    $sql = "INSERT INTO project_allotments (month, project, allotment, updated_by, assigned, customer, duration, created_by) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
             ON DUPLICATE KEY UPDATE 
                 allotment=VALUES(allotment), 
-                updated_by=VALUES(updated_by)";
+                updated_by=VALUES(updated_by),
+                assigned=VALUES(assigned),
+                customer=VALUES(customer),
+                duration=VALUES(duration),
+                created_by=VALUES(created_by)";
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $conn->error);
@@ -129,11 +133,15 @@ try {
     $success = true;
     $errorMsg = '';
     
-    // Insert for the next N months (defined by duration)
-    $targetMonth = '';
-    $stmt->bind_param("ssds", $targetMonth, $projectName, $allotment, $username);
+    // Determine active months
+    $activeMonths = [];
     for ($i = 0; $i < $duration; $i++) {
-        $targetMonth = $MONTHS[($startIndex + $i) % 12];
+        $activeMonths[] = $MONTHS[($startIndex + $i) % 12];
+    }
+
+    foreach ($MONTHS as $m) {
+        $mAllot = in_array($m, $activeMonths) ? $allotment : 0.00;
+        $stmt->bind_param("ssdsdsis", $m, $projectName, $mAllot, $username, $assigned, $customer, $duration, $username);
         if (!$stmt->execute()) {
             $success = false;
             $errorMsg = $stmt->error;

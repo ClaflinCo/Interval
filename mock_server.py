@@ -240,10 +240,22 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                     "duration": duration,
                     "created_by": "admin"
                 }
-                if startMonth:
-                    if startMonth not in MOCK_DATA['allotments']:
-                        MOCK_DATA['allotments'][startMonth] = {}
-                    MOCK_DATA['allotments'][startMonth][projectName] = allotment
+                
+                # Always initialize 12 monthly allotments (active duration months get allotment, others get 0)
+                MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+                try:
+                    startIndex = MONTHS.index(startMonth)
+                except ValueError:
+                    startIndex = 0
+                
+                active_months = []
+                for i in range(duration):
+                    active_months.append(MONTHS[(startIndex + i) % 12])
+                
+                for m in MONTHS:
+                    if m not in MOCK_DATA['allotments']:
+                        MOCK_DATA['allotments'][m] = {}
+                    MOCK_DATA['allotments'][m][projectName] = allotment if m in active_months else 0.0
                 
             response = {"success": True, "message": "Project created successfully."}
             self.wfile.write(json.dumps(response).encode())

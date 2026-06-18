@@ -84,9 +84,9 @@ foreach ($allotmentsToSave as $item) {
     
     $assignedVal = isset($assignments[$proj]) ? trim($assignments[$proj]) : null;
     
-    // Insert/update allotment for the current month
-    $stmt = $conn->prepare("INSERT INTO project_allotments (month, project, allotment, updated_by) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allotment=VALUES(allotment), updated_by=VALUES(updated_by)");
-    $stmt->bind_param("ssds", $month, $proj, $allot, $username);
+    // Update allotment for the current month (row is guaranteed to exist by sync_db migration)
+    $stmt = $conn->prepare("UPDATE project_allotments SET allotment = ?, updated_by = ? WHERE month = ? AND project = ?");
+    $stmt->bind_param("dsss", $allot, $username, $month, $proj);
     
     if (!$stmt->execute()) {
         $success = false;

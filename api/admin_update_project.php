@@ -129,10 +129,10 @@ try {
             $stmt->close();
         }
 
-        // Ensure the active month's allotment is updated/created
+        // Update the active month's allotment (row is guaranteed to exist)
         if (!empty($month)) {
-            $stmt = $conn->prepare("INSERT INTO project_allotments (month, project, allotment, updated_by) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allotment = VALUES(allotment), updated_by = VALUES(updated_by)");
-            $stmt->bind_param("ssds", $month, $name, $allotment, $username);
+            $stmt = $conn->prepare("UPDATE project_allotments SET allotment = ?, updated_by = ? WHERE month = ? AND project = ?");
+            $stmt->bind_param("dsss", $allotment, $username, $month, $name);
             $stmt->execute();
             $stmt->close();
         }
