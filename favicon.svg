@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
+  <!-- Clock Outer Ring -->
+  <circle cx="512" cy="200" r="150" fill="#05294B" />
+  
+  <!-- Clock Face -->
+  <circle cx="512" cy="200" r="120" fill="#FFFFFF" />
+  
+  <!-- Clock Ticks -->
+  <g stroke="#05294B" stroke-width="12" stroke-linecap="round">
+    <line x1="512" y1="88" x2="512" y2="108" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(30, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(60, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(90, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(120, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(150, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(180, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(210, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(240, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(270, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(300, 512, 200)" />
+    <line x1="512" y1="88" x2="512" y2="108" transform="rotate(330, 512, 200)" />
+  </g>
+  
+  <!-- Clock Hands -->
+  <!-- Hour hand pointing to 10 o'clock -->
+  <line x1="512" y1="200" x2="512" y2="135" stroke="#05294B" stroke-width="16" stroke-linecap="round" transform="rotate(-60, 512, 200)" />
+  <!-- Minute hand pointing to 2 o'clock -->
+  <line x1="512" y1="200" x2="512" y2="110" stroke="#05294B" stroke-width="12" stroke-linecap="round" transform="rotate(60, 512, 200)" />
+  
+  <!-- Center Cap -->
+  <circle cx="512" cy="200" r="15" fill="#05294B" />
+  
+  <!-- Slab Serif 'i' Body -->
+  <!-- Stem -->
+  <rect x="402" y="410" width="220" height="460" fill="#05294B" />
+  <!-- Top Left Serif Flag -->
+  <rect x="282" y="410" width="120" height="70" fill="#05294B" />
+  <!-- Bottom Serif Base -->
+  <rect x="232" y="870" width="560" height="70" fill="#05294B" />
+</svg>
