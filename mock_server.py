@@ -410,6 +410,9 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path.startswith('/api/admin_signups.php'):
             signup_id = int(data.get('id', 0))
             action = data.get('action', '')
+            role = data.get('role', 'Viewer')
+            if role not in ['Admin', 'Supervisor', 'Employee', 'Viewer']:
+                role = 'Viewer'
             
             success = False
             message = "Sign up request not found."
@@ -419,12 +422,12 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                     success = True
                     message = f"Sign up request {action}d successfully."
                     if action == 'approve':
-                        # Insert into mock users
+                        # Insert into mock users with selected role
                         new_user = {
                             "id": len(MOCK_USERS) + 1,
                             "username": s['username'],
                             "display_name": s['username'],
-                            "role": "Viewer"
+                            "role": role
                         }
                         MOCK_USERS.append(new_user)
                     break

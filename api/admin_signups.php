@@ -40,6 +40,11 @@ if ($method === 'GET') {
     $data = json_decode(file_get_contents("php://input"), true);
     $id = (int)($data['id'] ?? 0);
     $action = trim($data['action'] ?? ''); // 'approve' or 'reject'
+    $role = trim($data['role'] ?? 'Viewer');
+    $validRoles = ['Admin', 'Supervisor', 'Employee', 'Viewer'];
+    if (!in_array($role, $validRoles)) {
+        $role = 'Viewer';
+    }
 
     if ($id <= 0 || ($action !== 'approve' && $action !== 'reject')) {
         http_response_code(400);
@@ -89,13 +94,13 @@ if ($method === 'GET') {
         $userCheck->close();
 
         if ($success) {
-            // 2. Insert into users table
-            $insStmt = $conn->prepare("INSERT INTO users (username, password_hash, role, display_name) VALUES (?, ?, 'Viewer', ?)");
+            // 2. Insert into users table with selected role
+            $insStmt = $conn->prepare("INSERT INTO users (username, password_hash, role, display_name) VALUES (?, ?, ?, ?)");
             if (!$insStmt) {
                 $success = false;
                 $errorMsg = "Prepare insert user stmt failed: " . $conn->error;
             } else {
-                $insStmt->bind_param("sss", $request['username'], $request['password_hash'], $request['username']);
+                $insStmt->bind_param("ssss", $request['username'], $request['password_hash'], $role, $request['username']);
                 if (!$insStmt->execute()) {
                     $success = false;
                     $errorMsg = "Failed to create user account: " . $insStmt->error;

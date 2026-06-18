@@ -1082,6 +1082,27 @@ tbody td{padding:10px 13px;vertical-align:middle}
   </div>
 </div>
 
+<!-- Signup Approval Modal -->
+<div class="modal-overlay" id="signupApprovalModal" style="z-index: 310;">
+  <div class="modal" style="max-width: 400px; position: relative;">
+    <h2 style="color: var(--navy); margin-bottom: 6px;">Approve Sign Up</h2>
+    <p id="signupApprovalMessage" style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 16px;"></p>
+    <div style="margin-bottom: 18px;">
+      <label for="signupRoleSelect" style="font-size: 0.82rem; font-weight: 600; color: var(--navy); display: block; margin-bottom: 6px;">Assign Role</label>
+      <select id="signupRoleSelect" class="form-input" style="width: 100%; font-size: 0.88rem; padding: 8px 10px;">
+        <option value="Viewer">Viewer</option>
+        <option value="Employee">Employee</option>
+        <option value="Supervisor">Supervisor</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="signupApprovalCancelBtn">Cancel</button>
+      <button class="btn btn-navy" id="signupApprovalConfirmBtn">Approve</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════
 //  STATE
@@ -3752,19 +3773,54 @@ async function loadLockouts() {
   }
 }
 
+function showSignupApprovalModal(signupId) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('signupApprovalModal');
+    const msgEl = document.getElementById('signupApprovalMessage');
+    const roleSelect = document.getElementById('signupRoleSelect');
+    const okBtn = document.getElementById('signupApprovalConfirmBtn');
+    const cancelBtn = document.getElementById('signupApprovalCancelBtn');
+
+    msgEl.textContent = 'Are you sure you want to approve this sign up request? Select the role to assign to the new user.';
+    roleSelect.value = 'Viewer';
+    modal.classList.add('open');
+
+    okBtn.onclick = () => {
+      modal.classList.remove('open');
+      resolve(roleSelect.value);
+    };
+
+    cancelBtn.onclick = () => {
+      modal.classList.remove('open');
+      resolve(null);
+    };
+  });
+}
+
 async function resolveSignupRequest(id, action) {
-  const confirmed = await showConfirm(`Are you sure you want to ${action} this sign up request?`, `${action.toUpperCase()} Sign Up`);
-  if (!confirmed) return;
-  
+  let selectedRole = null;
+
+  if (action === 'approve') {
+    selectedRole = await showSignupApprovalModal(id);
+    if (!selectedRole) return;
+  } else {
+    const confirmed = await showConfirm('Are you sure you want to reject this sign up request?', 'Reject Sign Up');
+    if (!confirmed) return;
+  }
+
   try {
+    const payload = { id, action };
+    if (selectedRole) payload.role = selectedRole;
+
     const res = await fetch('api/admin_signups.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, action })
+      body: JSON.stringify(payload)
     });
     const d = await res.json();
     if (d.success) {
-      pushNotif('info', 'Sign Up Request Resolved', `Account request for ID ${id} has been ${action}d.`, null);
+      const label = action === 'approve' ? `approved as ${selectedRole}` : 'rejected';
+      pushNotif('info', 'Sign Up Request Resolved', `Account request has been ${label}.`, null);
       await loadLockouts();
     } else {
       await showAlert("Error: " + (d.message || "Unknown error"), "Action Error", "error");
