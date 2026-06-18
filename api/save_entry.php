@@ -78,15 +78,20 @@ if ($action === 'update' && !empty($id)) {
         $owner = $eRow['submitted_by'];
         $old_project = $eRow['project'];
         
-        // Employee can only edit their own entries
-        if ($role === 'Employee' && $owner !== $username) {
-            echo json_encode(["success" => false, "message" => "You can only edit your own entries."]);
-            exit;
+        $can_edit = false;
+        if ($role === 'Admin') {
+            $can_edit = true;
+        } elseif ($role === 'Supervisor') {
+            $has_proj_access = check_project_access($conn, $username, $role, $old_project);
+            $can_edit = ($owner === $username) || $has_proj_access;
+        } elseif ($role === 'Employee') {
+            $can_edit = ($owner === $username);
+        } else {
+            $can_edit = ($owner === $username);
         }
-        
-        // Enforce project access on the old project too
-        if (!check_project_access($conn, $username, $role, $old_project)) {
-            echo json_encode(["success" => false, "message" => "You do not have access to this project."]);
+
+        if (!$can_edit) {
+            echo json_encode(["success" => false, "message" => "You do not have permission to edit this entry."]);
             exit;
         }
     } else {

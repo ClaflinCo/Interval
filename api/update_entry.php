@@ -23,22 +23,19 @@ function sanitize_utf8($data) {
 // Helper function to check project access
 function check_project_access($conn, $username, $role, $proj) {
     if ($role === 'Admin') return true;
-    $accessStmt = $conn->prepare("SELECT assigned, created_by FROM project_allotments WHERE project = ?");
+    $accessStmt = $conn->prepare("SELECT assigned, created_by FROM projects WHERE name = ?");
     if (!$accessStmt) return false;
     $accessStmt->bind_param("s", $proj);
     $accessStmt->execute();
     $accessResult = $accessStmt->get_result();
     $hasAccess = false;
-    while ($aRow = $accessResult->fetch_assoc()) {
+    if ($aRow = $accessResult->fetch_assoc()) {
         if ($aRow['created_by'] === $username) {
             $hasAccess = true;
-            break;
-        }
-        if (!empty($aRow['assigned'])) {
+        } else if (!empty($aRow['assigned'])) {
             $assigned_users = array_map('trim', explode(',', $aRow['assigned']));
             if (in_array($username, $assigned_users)) {
                 $hasAccess = true;
-                break;
             }
         }
     }
@@ -95,14 +92,20 @@ try {
             $owner = $eRow['submitted_by'];
             $project = $eRow['project'];
             
-            // Employees can only delete their own entries
-            if ($user_role === 'Employee' && $owner !== $username) {
-                throw new Exception("You can only delete your own entries.");
+            $can_delete = false;
+            if ($user_role === 'Admin') {
+                $can_delete = true;
+            } elseif ($user_role === 'Supervisor') {
+                $has_proj_access = check_project_access($conn, $username, $user_role, $project);
+                $can_delete = ($owner === $username) || $has_proj_access;
+            } elseif ($user_role === 'Employee') {
+                $can_delete = ($owner === $username);
+            } else {
+                $can_delete = ($owner === $username);
             }
-            
-            // Users must have access to the project
-            if (!check_project_access($conn, $username, $user_role, $project)) {
-                throw new Exception("You do not have access to this project.");
+
+            if (!$can_delete) {
+                throw new Exception("You do not have permission to delete this entry.");
             }
         } else {
             throw new Exception("Entry not found.");

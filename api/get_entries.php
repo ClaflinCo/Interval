@@ -79,7 +79,19 @@ if ($result) {
         if ($row['hoursOverride'] !== null) {
             $row['hoursOverride'] = (float)$row['hoursOverride'];
         }
-        if ($user_role === 'Admin' || in_array($row['project'], $allowed_projects)) {
+        
+        $show = false;
+        if ($user_role === 'Admin') {
+            $show = true;
+        } elseif ($user_role === 'Supervisor') {
+            $show = in_array($row['project'], $allowed_projects) || ($row['submitted_by'] === $username);
+        } elseif ($user_role === 'Employee') {
+            $show = ($row['submitted_by'] === $username);
+        } else {
+            $show = in_array($row['project'], $allowed_projects) || ($row['submitted_by'] === $username);
+        }
+
+        if ($show) {
             $entries[] = $row;
         }
     }
@@ -97,7 +109,19 @@ if ($pendingResult) {
         if ($row['hoursOverride'] !== null) {
             $row['hoursOverride'] = (float)$row['hoursOverride'];
         }
-        if ($user_role === 'Admin' || in_array($row['project'], $allowed_projects)) {
+        
+        $show = false;
+        if ($user_role === 'Admin') {
+            $show = true;
+        } elseif ($user_role === 'Supervisor') {
+            $show = in_array($row['project'], $allowed_projects) || ($row['submitted_by'] === $username);
+        } elseif ($user_role === 'Employee') {
+            $show = ($row['submitted_by'] === $username);
+        } else {
+            $show = in_array($row['project'], $allowed_projects) || ($row['submitted_by'] === $username);
+        }
+
+        if ($show) {
             $pending[] = $row;
         }
     }
