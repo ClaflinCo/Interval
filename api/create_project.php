@@ -141,7 +141,7 @@ try {
 
     foreach ($MONTHS as $m) {
         $mAllot = in_array($m, $activeMonths) ? $allotment : 0.00;
-        $stmt->bind_param("ssdsdsis", $m, $projectName, $mAllot, $username, $assigned, $customer, $duration, $username);
+        $stmt->bind_param("ssdsssis", $m, $projectName, $mAllot, $username, $assigned, $customer, $duration, $username);
         if (!$stmt->execute()) {
             $success = false;
             $errorMsg = $stmt->error;

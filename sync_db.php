@@ -321,7 +321,7 @@ if ($projRes) {
             $cb = $row['created_by'];
             
             foreach ($MONTHS as $m) {
-                $insStmt->bind_param("ssssssis", $m, $pName, $cb, $ass, $cust, $dur, $cb);
+                $insStmt->bind_param("sssssis", $m, $pName, $cb, $ass, $cust, $dur, $cb);
                 $insStmt->execute();
             }
         }
