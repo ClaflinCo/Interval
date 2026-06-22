@@ -618,6 +618,32 @@ tbody td{padding:10px 13px;vertical-align:middle}
             </div>
           </div>
         </div>
+        
+        <!-- Manage Offered Services Section -->
+        <div style="border-top: 1.5px solid var(--border); padding-top: 20px; margin-top: 20px;">
+          <h3 style="font-size:0.9rem; color:var(--navy); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px; font-weight:700;">
+            Manage Offered Services
+          </h3>
+          <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:16px;">
+            Add or remove services offered to clients. Added services will appear as selectable checkboxes on projects.
+          </p>
+          
+          <div style="background:#f8f9fa; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+            <div class="fg-login" style="margin-bottom: 14px; display: flex; gap: 8px; align-items: flex-end;">
+              <div style="flex: 1; margin-bottom: 0;">
+                <label style="font-size: 0.72rem; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary); display: block; text-transform: uppercase; letter-spacing: .09em;">New Service Name</label>
+                <input type="text" id="advNewService" placeholder="e.g. Cybersecurity" style="width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--ink); font-size: 0.9rem; font-family: inherit; box-sizing: border-box;">
+              </div>
+              <button class="btn btn-navy" onclick="addServiceAdmin()" style="padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer; height: 38px; display: flex; align-items: center; justify-content: center;">Add</button>
+            </div>
+            
+            <label style="font-size: 0.72rem; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary); display: block; text-transform: uppercase; letter-spacing: .09em;">Registered Services</label>
+            <div id="advServicesList" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; background: white; border: 1.5px solid var(--border); border-radius: 6px; padding: 10px;">
+              <!-- Dynamic list of services with Delete button -->
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </aside>
@@ -832,25 +858,8 @@ tbody td{padding:10px 13px;vertical-align:middle}
       </div>
       <div class="fg" style="gap: 2px; margin-top: 5px;">
         <label style="font-size: 0.65rem;">Offered Services</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-            <input type="checkbox" name="cpServices" value="Placeholder 1" style="cursor: pointer;"> Placeholder 1
-          </label>
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-            <input type="checkbox" name="cpServices" value="Placeholder 2" style="cursor: pointer;"> Placeholder 2
-          </label>
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-            <input type="checkbox" name="cpServices" value="Placeholder 3" style="cursor: pointer;"> Placeholder 3
-          </label>
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-            <input type="checkbox" name="cpServices" value="Placeholder 4" style="cursor: pointer;"> Placeholder 4
-          </label>
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-            <input type="checkbox" name="cpServices" value="Placeholder 5" style="cursor: pointer;"> Placeholder 5
-          </label>
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-            <input type="checkbox" name="cpServices" value="Placeholder 6" style="cursor: pointer;"> Placeholder 6
-          </label>
+        <div id="cpServicesContainer" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px;">
+          <!-- Checkboxes generated dynamically -->
         </div>
       </div>
     </div>
@@ -912,25 +921,8 @@ tbody td{padding:10px 13px;vertical-align:middle}
           
           <div class="fg" style="gap: 2px;">
             <label style="font-size: 0.65rem;">Offered Services</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px;">
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-                <input type="checkbox" name="apmServices" value="Placeholder 1" style="cursor: pointer;"> Placeholder 1
-              </label>
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-                <input type="checkbox" name="apmServices" value="Placeholder 2" style="cursor: pointer;"> Placeholder 2
-              </label>
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-                <input type="checkbox" name="apmServices" value="Placeholder 3" style="cursor: pointer;"> Placeholder 3
-              </label>
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-                <input type="checkbox" name="apmServices" value="Placeholder 4" style="cursor: pointer;"> Placeholder 4
-              </label>
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-                <input type="checkbox" name="apmServices" value="Placeholder 5" style="cursor: pointer;"> Placeholder 5
-              </label>
-              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);">
-                <input type="checkbox" name="apmServices" value="Placeholder 6" style="cursor: pointer;"> Placeholder 6
-              </label>
+            <div id="apmServicesContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px;">
+              <!-- Checkboxes generated dynamically -->
             </div>
           </div>
           
@@ -1114,6 +1106,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 let PROJECTS=[];
 let PROJECTS_META={};
+let SERVICES=[];
 
 // Force EST/EDT for logic
 function getESTDate() {
@@ -1581,6 +1574,8 @@ async function init(){
     
     PROJECTS_META = data.projectsMeta || {};
     PROJECTS = data.projects || [];
+    SERVICES = data.services || [];
+    renderServicesCheckboxes();
     PROJECTS = (PROJECTS || []).map(p => String(p).trim()).filter(p => p.length > 0);
     PROJECTS = [...new Set(PROJECTS)];
     PROJECTS.sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
@@ -1697,6 +1692,7 @@ async function showAdvancedSettingsView() {
   document.getElementById('advUserCurrentRole').textContent = '—';
   document.getElementById('advUserRoleErr').style.display = 'none';
   onAdvUserChange();
+  renderAdminServicesList();
   
   try {
     const res = await fetch('api/admin_users.php');
@@ -1715,6 +1711,138 @@ async function showAdvancedSettingsView() {
     }
   } catch (e) {
     await showAlert("Network error while loading users.", "Error", "error");
+  }
+}
+
+function renderServicesCheckboxes() {
+  const cpContainer = document.getElementById('cpServicesContainer');
+  const apmContainer = document.getElementById('apmServicesContainer');
+  
+  if (cpContainer) {
+    cpContainer.innerHTML = '';
+    if (SERVICES.length === 0) {
+      cpContainer.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted); grid-column: 1/-1;">No services registered</span>';
+    } else {
+      SERVICES.forEach(s => {
+        const label = document.createElement('label');
+        label.style.cssText = 'display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);';
+        
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = 'cpServices';
+        input.value = s.service;
+        input.style.cursor = 'pointer';
+        
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(' ' + s.service));
+        cpContainer.appendChild(label);
+      });
+    }
+  }
+  
+  if (apmContainer) {
+    apmContainer.innerHTML = '';
+    if (SERVICES.length === 0) {
+      apmContainer.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted); grid-column: 1/-1;">No services registered</span>';
+    } else {
+      SERVICES.forEach(s => {
+        const label = document.createElement('label');
+        label.style.cssText = 'display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);';
+        
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = 'apmServices';
+        input.value = s.service;
+        input.style.cursor = 'pointer';
+        
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(' ' + s.service));
+        apmContainer.appendChild(label);
+      });
+    }
+  }
+}
+
+function renderAdminServicesList() {
+  const container = document.getElementById('advServicesList');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  if (SERVICES.length === 0) {
+    container.innerHTML = '<span style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:10px 0;">No services registered</span>';
+    return;
+  }
+  
+  SERVICES.forEach(s => {
+    const item = document.createElement('div');
+    item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 6px 8px; border-bottom: 1px solid var(--border);';
+    
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = s.service;
+    nameSpan.style.fontWeight = '500';
+    nameSpan.style.color = 'var(--navy)';
+    
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-danger btn-sm';
+    delBtn.style.cssText = 'padding: 2px 6px; font-size: 0.7rem; border-radius: 4px;';
+    delBtn.textContent = 'Remove';
+    delBtn.onclick = () => deleteServiceAdmin(s.id, s.service);
+    
+    item.appendChild(nameSpan);
+    item.appendChild(delBtn);
+    container.appendChild(item);
+  });
+}
+
+async function addServiceAdmin() {
+  const input = document.getElementById('advNewService');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) {
+    await showAlert("Please enter a service name.", "Validation Error", "error");
+    return;
+  }
+  
+  try {
+    const res = await fetch('api/admin_services.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', service: val })
+    });
+    const data = await res.json();
+    if (data.success) {
+      input.value = '';
+      pushNotif('success', 'Service Created', `"${val}" has been added as a service.`, null);
+      await init();
+      renderAdminServicesList();
+    } else {
+      await showAlert(data.message || "Failed to create service.", "Service Creation Error", "error");
+    }
+  } catch (e) {
+    await showAlert("Network error while adding service.", "Connection Error", "error");
+  }
+}
+
+async function deleteServiceAdmin(id, serviceName) {
+  const confirmed = await showConfirm(`Are you sure you want to delete the service "${serviceName}"? This will not affect existing projects, but it will be removed as an option for new/edited projects.`, "Remove Service");
+  if (!confirmed) return;
+  
+  try {
+    const res = await fetch('api/admin_services.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', id: id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      pushNotif('success', 'Service Removed', `"${serviceName}" has been removed.`, null);
+      await init();
+      renderAdminServicesList();
+    } else {
+      await showAlert(data.message || "Failed to delete service.", "Service Removal Error", "error");
+    }
+  } catch (e) {
+    await showAlert("Network error while removing service.", "Connection Error", "error");
   }
 }
 

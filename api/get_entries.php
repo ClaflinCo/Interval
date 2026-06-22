@@ -175,6 +175,20 @@ if ($notifStmt) {
     $notifStmt->close();
 }
 
+// Fetch all registered services
+$services = [];
+$servicesSql = "SELECT id, service, created_by FROM services ORDER BY service ASC";
+$servicesRes = $conn->query($servicesSql);
+if ($servicesRes) {
+    while ($sRow = $servicesRes->fetch_assoc()) {
+        $services[] = [
+            "id" => (int)$sRow['id'],
+            "service" => $sRow['service'],
+            "created_by" => $sRow['created_by']
+        ];
+    }
+}
+
 // Return state bundle - flattened for Frontend
 $response = [
     "success" => true,
@@ -183,7 +197,8 @@ $response = [
     "allotments" => $allotments,
     "projects" => $projects,
     "projectsMeta" => $projectsMeta,
-    "notifications" => $userNotifications
+    "notifications" => $userNotifications,
+    "services" => $services
 ];
 
 function sanitize_utf8($data) {

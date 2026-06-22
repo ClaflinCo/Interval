@@ -122,6 +122,34 @@ $conn->query("
 ");
 log_sync("Checked account_requests table existence.<br>");
 
+// 2g. Ensure services table structure and constraints
+$conn->query("
+    CREATE TABLE IF NOT EXISTS services (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        service VARCHAR(100) NOT NULL UNIQUE,
+        created_by VARCHAR(100) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+");
+log_sync("Checked services table existence.<br>");
+
+// Seed default services if empty
+$chk = $conn->query("SELECT COUNT(*) as count FROM services");
+if ($chk && $row = $chk->fetch_assoc()) {
+    if ((int)$row['count'] === 0) {
+        $defaultServices = ['vCIO', 'Shadow IT', 'Professional Services', 'Network Admin', 'IT Project Manager'];
+        $stmt = $conn->prepare("INSERT INTO services (service, created_by) VALUES (?, 'System')");
+        if ($stmt) {
+            foreach ($defaultServices as $ds) {
+                $stmt->bind_param("s", $ds);
+                $stmt->execute();
+            }
+            $stmt->close();
+            log_sync("Seeded default services.<br>");
+        }
+    }
+}
+
 // Drop the unique constraint on username in account_requests if it exists.
 // Usernames only need to be unique in the active users table — historical
 // account_request records (Approved/Rejected) should not block re-registration.
