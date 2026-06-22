@@ -31,18 +31,25 @@ $res['db_config'] = [
     'host_set' => !empty($host),
     'user_set' => !empty($user),
     'pass_set' => !empty($pass),
-    'dbname_set' => !empty($dbname)
+    'dbname_set' => !empty($dbname),
+    'host' => $host,
+    'user' => $user,
+    'dbname' => $dbname
 ];
 
-$conn = @new mysqli($host, $user, $pass, $dbname);
-
-if ($conn->connect_error) {
+try {
+    $conn = @new mysqli($host, $user, $pass, $dbname);
+    if ($conn->connect_error) {
+        $res['db_connected'] = false;
+        $res['db_error'] = $conn->connect_error;
+    } else {
+        $res['db_connected'] = true;
+        $res['db_charset'] = $conn->character_set_name();
+        $conn->close();
+    }
+} catch (Throwable $e) {
     $res['db_connected'] = false;
-    $res['db_error'] = $conn->connect_error;
-} else {
-    $res['db_connected'] = true;
-    $res['db_charset'] = $conn->character_set_name();
-    $conn->close();
+    $res['db_error'] = $e->getMessage();
 }
 
 echo json_encode($res, JSON_PRETTY_PRINT);
