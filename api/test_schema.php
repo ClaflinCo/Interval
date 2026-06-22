@@ -1,10 +1,10 @@
 <?php
 header("Content-Type: application/json");
-require_once 'bootstrap.php';
+require_once __DIR__ . '/bootstrap.php';
 
 $res = [];
 try {
-    require 'config.php';
+    require_once __DIR__ . '/config.php';
     
     // projects
     try {
