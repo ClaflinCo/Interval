@@ -5,7 +5,7 @@ ini_set('display_errors', 0);
 try {
 header("Content-Type: application/json");
 require 'config.php';
-require_once 'notify_n8n.php';
+require_once '../api/notify_n8n.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 $username = $data['username'] ?? '';
@@ -77,7 +77,7 @@ if($user = $result->fetch_assoc()){
         }
 
         // Start session and return success
-        require_once 'bootstrap.php';
+        require_once '../api/bootstrap.php';
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];

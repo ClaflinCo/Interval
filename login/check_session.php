@@ -1,7 +1,7 @@
 <?php
-// api/check_session.php
+// login/check_session.php
 header("Content-Type: application/json");
-require_once 'bootstrap.php';
+require_once '../api/bootstrap.php';
 
 if (isset($_SESSION['user_id'])) {
     echo json_encode([

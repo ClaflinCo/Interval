@@ -1366,7 +1366,7 @@ async function doSignup() {
   spinnerContainer.style.display = 'flex';
 
   try {
-    const res = await fetch('api/signup.php', {
+    const res = await fetch('login/signup.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, username, password, passwordConfirm })
@@ -1417,7 +1417,7 @@ async function doLogin(){
   document.getElementById('loginPass').disabled = true;
 
   try {
-    const res = await fetch('api/login.php', {
+    const res = await fetch('login/login.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: u, password: p })
@@ -1456,7 +1456,7 @@ async function doLogin(){
 }
 
 async function doLogout(){
-  try { await fetch('api/logout.php'); } catch(e) {}
+  try { await fetch('login/logout.php'); } catch(e) {}
   currentUser=null;
   document.getElementById('app').style.display='none';
   document.getElementById('loginPage').style.display='flex';
@@ -1483,7 +1483,7 @@ async function doLogout(){
 
 async function checkSession() {
   try {
-    const res = await fetch('api/check_session.php');
+    const res = await fetch('login/check_session.php');
     const data = await res.json();
     if (data.success) {
       currentUser = data.user;
