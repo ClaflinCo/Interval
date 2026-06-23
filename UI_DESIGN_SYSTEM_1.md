@@ -2,7 +2,7 @@
 
 > **Read this before generating any UI.** This file defines the mandatory visual standards for every application we build. It is stack-agnostic: the rules apply whether you are writing React, React Native, Vue, or plain HTML/CSS. Map the tokens to whatever the project uses (CSS custom properties, Tailwind config, a JS theme object, a React Native `StyleSheet`) but **do not change the values**.
 
-*Version 4 — brand colors and logos now confirmed from official Claflin A.L.M. 2025 assets (see §1, §2.1, §4). Language synthesized from three approved internal apps (NP Medical App, Time Tracker, Hospital Inventory): palette/type follow the NP Medical direction reconciled to the official brand blue; structural patterns from Time Tracker; mobile/touch from the Hospital Inventory PWA. Where sources disagreed, the cleaner, more professional option was chosen.*
+*Version 5 — Consolidated primary colors with official Claflin A.L.M. brand navy (#05294B) to establish dark surfaces and header consistency. Reconciled with implemented legacy style mappings, spin animations, global filter bars, login spinner loaders, warn/exceeded status colors, and updated modal sizing specifications.*
 
 ---
 
@@ -32,13 +32,13 @@ The brand is **Claflin A.L.M.** (est. 1817). Official colors and logos are confi
 
 | Token | Value | Role |
 |---|---|---|
-| `--color-primary` | `#0A3B73` | Primary brand blue (official Claflin A.L.M. wordmark blue). Headers, primary buttons, links, headings, key figures. |
-| `--color-primary-hover` | `#072c57` | Hover/active for primary surfaces. |
-| `--color-navy` | `#05294B` | Brand container navy (official logo-background navy). Dark login/header backdrops, footer, on-brand dark surfaces. Deeper than primary. |
+| `--color-primary` | `#05294B` | Primary brand blue/navy (official Claflin A.L.M. logo-background navy). Unified as primary and container color for dark headers, login card backdrops, primary buttons, links, headings, key figures. |
+| `--color-primary-hover` | `#031f3b` | Hover/active for primary surfaces. |
+| `--color-navy` | `#05294B` | Identical to `--color-primary`. Deep brand navy backdrop, header background, footer, and main dark surfaces. |
 | `--color-accent` | `#009CDE` | Single accent (cyan). Focus rings, active states, highlights, secondary emphasis. Not part of the logo — use sparingly. |
 | `--color-accent-hover` | `#007bb0` | Hover for accent surfaces. |
 | `--color-success` | `#00A99D` | Success / positive (teal). |
-| `--color-warning` | `#FFC20E` | Caution / pending. |
+| `--color-warning` | `#FFC20E` | Caution / pending (yellow/gold/amber). |
 | `--color-error` | `#E35205` | Errors, destructive actions. |
 | `--text-main` | `#333333` | Primary text. |
 | `--text-secondary` | `#5a6268` | Secondary text, labels. |
@@ -52,7 +52,19 @@ The brand is **Claflin A.L.M.** (est. 1817). Official colors and logos are confi
 | `--border-light` | `#dae0e5` | All borders and dividers. |
 | `--border-focus` | `#009CDE` | Focused input border (= accent). |
 
-*Brand note: the official wordmark blue (`#0A3B73`) and our prior working primary (`#003B71`) were nearly identical — the brand asset confirmed the choice. `--color-navy` (`#05294B`) is the deeper navy used as the logo's background fill; reach for it when you need an on-brand dark surface.*
+*Brand note: `--color-primary` was consolidated from `#0A3B73` to the official logo background navy fill `#05294B` to unify visual identity across dark headers, login backdrops, and active elements. `--color-navy` shares this value.*
+
+**Legacy Variable Mappings (for compatibility in retrofitted codebases):**
+- `--navy` / `--navy-light` / `--navy2` → mapped to `--color-primary` (`#05294B`), `--bg-active` (`#f0f7ff`), `--color-primary-hover` (`#031f3b`).
+- `--gold` / `--gold2` / `--gold-light` → mapped to `--color-accent` (`#009CDE`), `--color-accent-hover` (`#007bb0`), `--bg-active` (`#f0f7ff`).
+- `--surface` → `--bg-card` (`#ffffff`).
+- `--bg` → `--bg-app` (`#f8f9fa`).
+- `--border` → `--border-light` (`#dae0e5`).
+- `--ink` / `--ink2` → `--text-main` (`#333333`), `--text-secondary` (`#5a6268`).
+- `--red` / `--green` / `--amber` → `--color-error` (`#E35205`), `--color-success` (`#00A99D`), `--color-warning` (`#FFC20E`).
+- `--override` / `--override-bg` / `--override-border` → specific override red (`#d32f2f`), (`rgba(211, 47, 47, 0.1)`), (`rgba(211, 47, 47, 0.25)`).
+- `--radius` → `--radius-xl` (`12px`).
+- `--shadow` → `--shadow-md`.
 
 **Tints for status backgrounds:** error → `#fef2f2` / `rgba(227,82,5,.1)`; success → teal at ~10% opacity; warning → amber at ~12%. Keep these for badge and alert backgrounds only.
 
@@ -130,12 +142,13 @@ React Native: bundle Open Sans via `expo-font`; don't substitute the system font
 
 ### 2.6 Motion
 
-Short and subtle. `--transition-fast: 150ms ease-in-out`, `--transition-normal: 250ms ease-in-out`. Buttons may use `transform: scale(0.98)` on `:active`. Entrance animations (one of):
+Short and subtle. `--transition-fast: 150ms ease-in-out`, `--transition-normal: 250ms ease-in-out`. Buttons may use `transform: scale(0.98)` on `:active`. Entrance and utility animations:
 ```css
 @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 @keyframes slideUp { from{opacity:0;transform:translateY(20px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 ```
-Apply `fadeIn .5s` to the login card/header and page content; `slideUp` (with a gentle overshoot cubic-bezier) to modals. No decorative or looping animation.
+Apply `fadeIn .5s` to the login card/header and page content; `slideUp` (with a gentle overshoot cubic-bezier) to modals. Use `spin` (via the `.spin-animation` rule) for active progress, spinner, or data-refresh indicators. No decorative or looping animations should be used unless they serve an active functional indication (e.g. syncing or loading).
 
 ### 2.7 Per-stack token mapping
 
@@ -161,7 +174,7 @@ Every app's login screen is the same. Only the title text, subtitle, and logos c
 3. **Login card:** `--bg-card`, `border-radius: var(--radius-xl)` (12px), `box-shadow: var(--shadow-lg)`, `padding: var(--space-6)`, `max-width:400px`, `width:100%`, `fadeIn .5s .1s backwards`. Card header title (e.g. "Staff Login") in `--font-size-xl`, `--color-primary`.
 4. **Fields:** stacked. Each has an UPPERCASE letter-spaced `--text-secondary` label above a full-width input. Input: `padding:0.75rem 1rem`, `2px solid --border-light`, `border-radius:var(--radius-md)`, white bg. **Focus:** border `--border-focus` (cyan), `box-shadow:0 0 0 4px rgba(0,156,222,.2)`, background `--bg-input-focus`. Field gap via `margin-bottom: var(--space-4)`.
 5. **Error:** `--color-error` text on an error tint (`rgba(227,82,5,.1)`), `border-radius:var(--radius-md)`, centered, `role="alert"`, shown only when present.
-6. **Submit button:** full-width `btn-primary`, label "Sign In" → "Authenticating…" while loading. Disabled until both fields are filled. Submits on Enter.
+6. **Submit button & Spinner:** full-width `btn-primary`, label "Sign In". When authenticating, the button element is disabled and hidden, replaced visually by the loading spinner (`.login-loading-container` displaying `.login-spinner` centered with spin animation) to indicate progress and block double submissions. Disabled until both fields are filled. Submits on Enter.
 
 Reference JSX skeleton:
 ```jsx
@@ -215,9 +228,18 @@ One primary action per view. Pair `btn-primary` with `btn-secondary`/`btn-outlin
 
 Field group: UPPERCASE letter-spaced `--text-secondary` label above the control, `gap: var(--space-2)`, `margin-bottom: var(--space-4)`, left-aligned. Inputs/selects/textarea: `--font-size-base`, `padding:0.75rem 1rem`, `2px solid --border-light`, `border-radius: var(--radius-md)`, white bg. **Focus:** border `--border-focus`, `box-shadow:0 0 0 4px rgba(0,156,222,.2)`, bg `--bg-input-focus`. **Error:** border `--color-error`, bg `#fff8f8`, message in `--color-error` with `slideDown .2s`. Placeholders `--text-muted` at `0.6` opacity.
 
+**Global Filter Bar (for dashboard lists and tables):**
+- **Container (`.filter-bar`):** Horizontal flex layout, `align-items: center`, `justify-content: flex-start`, `gap: 20px`, background `--bg-card` (`var(--surface)`), padding `14px 24px`, bottom border `1px solid var(--border-light)`, rounded at `--radius-xl` (`var(--radius)`), elevated with `--shadow-md` (`var(--shadow)`).
+- **Label (`.filter-label`):** UPPERCASE letter-spaced `--text-secondary` (or `--navy`), font size `0.8rem`, weight 700.
+- **Select dropdowns (`.filter-select`):** background `var(--surface)`, border `1.5px solid var(--border)`, radius `6px`, padding `6px 12px`, font size `0.9rem`. On focus: border `--color-navy`, outline none, `box-shadow: 0 0 0 3px rgba(27,79,114,0.1)`.
+
 ### 3.6 Tables
 
 `width:100%`. **Head:** UPPERCASE `--text-secondary` `--font-size-xs` weight 600, `.08em` spacing, `1px --border-light` bottom, left-aligned, padded `~0.75rem 0.875rem`. **Rows:** `1px --border-light` divider, hover bg `--bg-active`. Numeric cells right- or center-aligned, weight 500. Empty state: centered, italic, `--text-muted`, padded generously. Search/filter inputs above the table use a `1px` border that goes `--color-accent` + `0 0 0 3px rgba(0,156,222,.1)` on focus.
+
+**Value-Based Cell Formatting:**
+- **Exceeded limits / alert overrides (`.exceeded`):** Color text to `--color-error` / `--red` (with `!important` to override standard table cell styles).
+- **Warning thresholds (`.warn`):** Color text to `--color-warning` / `--amber` (with `!important`).
 
 ### 3.7 Badges / status pills
 
@@ -225,7 +247,16 @@ Small, UPPERCASE, weight 600, `--font-size-xs`, `.05em` spacing, `padding:2px 7p
 
 ### 3.8 Modals
 
-Overlay `rgba(0,0,0,.5)` with `backdrop-filter: blur(2px)`, `position:fixed; inset:0`, flex-centered, `z-index:1000`, `fadeIn .2s`. Dialog: `--bg-card`, `padding:2.5rem`, `border-radius: var(--radius-xl)`, `box-shadow: --shadow-lg`, `max-width:500px`, `width:90%`, `1px --border-light`, `slideUp .3s cubic-bezier(.34,1.56,.64,1)`. Title `--font-size-xl` `--color-primary`; body `--font-size-base`, `line-height:1.6`. Footer: actions row (primary + secondary), confirm button min-width `120px`.
+- **Overlay (`.modal-overlay`, `.export-modal-overlay`):** `rgba(0,0,0,.5)` color, `position:fixed; inset:0`, flex-centered, `z-index: 200`. When closed, `display: none`; when active, `display: flex`.
+- **Dialogue container (`.modal`):** `--bg-card`, `border-radius: var(--radius-xl)` (12px), `box-shadow: --shadow-lg`, `animation: fadeUp 0.25s ease`.
+- **Hierarchy of Modal Sizes & Layouts:**
+  - **Success / Small Confirmation Modals:** `max-width: 380px`, `padding: 30px`. Icon center-aligned `.modal-success-icon` (`font-size: 3.5rem; color: var(--color-success)`), centered title and text.
+  - **Standard Modals (Delete/Confirm):** `max-width: 480px`, `width: 90%`, `padding: 30px`.
+  - **Form-based Input Modals (Create/Edit):** `max-width: 500px`, `max-height: 90vh; overflow-y: auto`. Header has a border divider `2px solid var(--border-light)`, footer action items separated by a top border `1.5px solid var(--border-light)`.
+  - **Large Management Modals (Admin Panel/Report lists):** `max-width: 850px`, `width: 95%`, `max-height: 90vh; overflow-y: auto`, `padding: 25px 30px`.
+  - **Specialized Modals (Export Modal - `.export-modal`):** Header is distinct with dark background (`.export-modal-hd` using background `--color-primary`), body has custom selection grids (`.export-type-btns` 3-column layout) with hover highlights.
+- **Title / Headers:** Title uses `.modal h2` with `font-size: 1.25rem`, color `var(--color-navy)`. Management headers support dragging behavior (`cursor: move; user-select: none`).
+- **Footer Actions (`.modal-actions`):** Flex alignment, `gap: 10px`, `margin-top: 20px`, `justify-content: flex-end`.
 
 ---
 

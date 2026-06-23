@@ -77,7 +77,7 @@ MOCK_USERS = [
 
 class MockHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path.startswith('/login/check_session.php'):
+        if self.path.startswith('/api/check_session.php'):
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -147,7 +147,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
 
-        if self.path.startswith('/login/login.php'):
+        if self.path.startswith('/api/login.php'):
             response = {"success": True, "user": {"id": 1, "username": "admin", "display": "Admin User", "role": "Admin"}}
             self.wfile.write(json.dumps(response).encode())
 
@@ -391,7 +391,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
             response = {"success": True, "message": "Report resolved successfully."}
             self.wfile.write(json.dumps(response).encode())
             
-        elif self.path.startswith('/login/signup.php'):
+        elif self.path.startswith('/api/signup.php'):
             email = data.get('email', '')
             username = data.get('username', '')
             password = data.get('password', '')
