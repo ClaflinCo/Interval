@@ -858,7 +858,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
       </div>
       <div class="fg" style="gap: 2px; margin-top: 5px;">
         <label style="font-size: 0.65rem;">Offered Services</label>
-        <div id="cpServicesContainer" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px;">
+        <div id="cpServicesContainer" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px; max-height: 180px; overflow-y: auto;">
           <!-- Checkboxes generated dynamically -->
         </div>
       </div>
@@ -921,7 +921,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
           
           <div class="fg" style="gap: 2px;">
             <label style="font-size: 0.65rem;">Offered Services</label>
-            <div id="apmServicesContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px;">
+            <div id="apmServicesContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px; max-height: 180px; overflow-y: auto;">
               <!-- Checkboxes generated dynamically -->
             </div>
           </div>
@@ -1575,6 +1575,7 @@ async function init(){
     PROJECTS_META = data.projectsMeta || {};
     PROJECTS = data.projects || [];
     SERVICES = data.services || [];
+    SERVICES.sort((a, b) => (a.service || '').toLowerCase().localeCompare((b.service || '').toLowerCase()));
     renderServicesCheckboxes();
     PROJECTS = (PROJECTS || []).map(p => String(p).trim()).filter(p => p.length > 0);
     PROJECTS = [...new Set(PROJECTS)];
