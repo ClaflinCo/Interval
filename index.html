@@ -2687,8 +2687,17 @@ function onProjectSelectChange() {
   const pName = fProject.value;
   fService.innerHTML = '<option value="">— Select Service —</option>';
   
-  if (pName && PROJECTS_META[pName] && PROJECTS_META[pName].services) {
-    const servicesList = PROJECTS_META[pName].services.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  if (pName) {
+    let servicesList = [];
+    if (PROJECTS_META[pName] && PROJECTS_META[pName].services) {
+      servicesList = PROJECTS_META[pName].services.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    }
+    
+    // Fall back to all registered services if none specified for the project
+    if (servicesList.length === 0 && typeof SERVICES !== 'undefined' && SERVICES) {
+      servicesList = SERVICES.map(s => s.service).filter(s => s && s.trim().length > 0);
+    }
+    
     servicesList.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s;

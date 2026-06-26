@@ -232,13 +232,20 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                 assigned_list.append('admin')
             assigned = ', '.join(assigned_list)
             
+            servicesRaw = data.get('services', '')
+            if isinstance(servicesRaw, list):
+                services = ', '.join(servicesRaw)
+            else:
+                services = str(servicesRaw)
+            
             if projectName and projectName not in MOCK_DATA['projects']:
                 MOCK_DATA['projects'].append(projectName)
                 MOCK_DATA['projectsMeta'][projectName] = {
                     "assigned": assigned,
                     "customer": customer,
                     "duration": duration,
-                    "created_by": "admin"
+                    "created_by": "admin",
+                    "services": services
                 }
                 
                 # Always initialize 12 monthly allotments (active duration months get allotment, others get 0)

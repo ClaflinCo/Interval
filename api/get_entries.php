@@ -141,7 +141,8 @@ if ($user_role === 'Admin') {
                         "assigned" => '',
                         "customer" => '',
                         "duration" => 1,
-                        "created_by" => ''
+                        "created_by" => '',
+                        "services" => ''
                     ];
                 }
             }
