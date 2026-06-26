@@ -81,7 +81,7 @@ if ($action === 'update' && !empty($id)) {
         $can_edit = false;
         if ($role === 'Admin') {
             $can_edit = true;
-        } elseif ($role === 'Supervisor') {
+        } elseif ($role === 'Supervisor' || $role === 'C-Suite') {
             $has_proj_access = check_project_access($conn, $username, $role, $old_project);
             $can_edit = ($owner === $username) || $has_proj_access;
         } elseif ($role === 'Employee') {

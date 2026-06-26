@@ -602,6 +602,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
               <select id="advRoleSelect" style="width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--ink); font-size: 0.9rem; font-family: inherit;">
                 <option value="">Choose new role...</option>
                 <option value="Admin">Admin</option>
+                <option value="C-Suite">C-Suite</option>
                 <option value="Supervisor">Supervisor</option>
                 <option value="Employee">Employee</option>
                 <option value="Viewer">Viewer</option>
@@ -1089,6 +1090,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
         <option value="Viewer">Viewer</option>
         <option value="Employee">Employee</option>
         <option value="Supervisor">Supervisor</option>
+        <option value="C-Suite">C-Suite</option>
         <option value="Admin">Admin</option>
       </select>
     </div>
@@ -1429,7 +1431,7 @@ async function doLogin(){
       document.getElementById('loginPage').style.display='none';
       document.getElementById('app').style.display='block';
       document.getElementById('userLabel').textContent=currentUser.display;
-      const isPrivileged = currentUser.role === 'Admin' || currentUser.role === 'Supervisor';
+      const isPrivileged = currentUser.role === 'Admin' || currentUser.role === 'Supervisor' || currentUser.role === 'C-Suite';
       document.getElementById('editAllotBtn').style.display = isPrivileged ? '' : 'none';
       const isViewer = currentUser.role === 'Viewer' || currentUser.role === 'viewer';
       document.getElementById('toggleAddBtn').style.display = isViewer ? 'none' : '';
@@ -1490,7 +1492,7 @@ async function checkSession() {
       document.getElementById('loginPage').style.display='none';
       document.getElementById('app').style.display='block';
       document.getElementById('userLabel').textContent=currentUser.display;
-      const isPrivileged = currentUser.role === 'Admin' || currentUser.role === 'Supervisor';
+      const isPrivileged = currentUser.role === 'Admin' || currentUser.role === 'Supervisor' || currentUser.role === 'C-Suite';
       document.getElementById('editAllotBtn').style.display = isPrivileged ? '' : 'none';
       const isViewer = currentUser.role === 'Viewer' || currentUser.role === 'viewer';
       document.getElementById('toggleAddBtn').style.display = isViewer ? 'none' : '';
@@ -1855,7 +1857,7 @@ function onAdvUserChange() {
   
   // Clear role options and rebuild
   roleSelect.innerHTML = '<option value="">Choose new role...</option>';
-  const allRoles = ['Admin', 'Supervisor', 'Employee', 'Viewer'];
+  const allRoles = ['Admin', 'C-Suite', 'Supervisor', 'Employee', 'Viewer'];
   
   if (!userId) {
     currentRoleSpan.textContent = '—';
@@ -2202,7 +2204,7 @@ function buildTabs(){
   
   const cpContainer = document.getElementById('filterBarCreateProjectContainer');
   if (cpContainer) {
-    if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Supervisor')) {
+    if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Supervisor' || currentUser.role === 'C-Suite')) {
       cpContainer.style.display = 'flex';
     } else {
       cpContainer.style.display = 'none';
@@ -2506,7 +2508,7 @@ async function rejectEntry(id){
 //  ALLOTMENT EDITOR
 // ═══════════════════════════════════════════════════
 function toggleAllotmentEdit(){
-  if(currentUser&&currentUser.role!=='Admin'&&currentUser.role!=='Supervisor')return;
+  if(currentUser&&currentUser.role!=='Admin'&&currentUser.role!=='Supervisor'&&currentUser.role!=='C-Suite')return;
   const modal = document.getElementById('allotmentEditModal');
   const show = !modal.classList.contains('open');
   if(show){
@@ -2538,7 +2540,7 @@ function toggleAllotmentEdit(){
       const textNode = document.createTextNode(`${p}${cust}`);
       span.appendChild(textNode);
       
-      if (currentUser && currentUser.role === 'Supervisor') {
+      if (currentUser && (currentUser.role === 'Supervisor' || currentUser.role === 'C-Suite')) {
         const reqBtn = document.createElement('button');
         reqBtn.textContent = '+';
         reqBtn.title = 'Request project change from admin';
@@ -3255,7 +3257,7 @@ let selectedAdminProject = '';
 function onEditProjectsClick() {
   if (currentUser && currentUser.role === 'Admin') {
     openAdminProjectManagerModal();
-  } else if (currentUser && currentUser.role === 'Supervisor') {
+  } else if (currentUser && (currentUser.role === 'Supervisor' || currentUser.role === 'C-Suite')) {
     toggleAllotmentEdit();
   }
 }

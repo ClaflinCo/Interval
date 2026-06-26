@@ -83,7 +83,7 @@ if ($result) {
         $show = false;
         if ($user_role === 'Admin') {
             $show = true;
-        } elseif ($user_role === 'Supervisor') {
+        } elseif ($user_role === 'Supervisor' || $user_role === 'C-Suite') {
             $show = in_array($row['project'], $allowed_projects) || ($row['submitted_by'] === $username);
         } elseif ($user_role === 'Employee') {
             $show = ($row['submitted_by'] === $username);
@@ -113,7 +113,7 @@ if ($pendingResult) {
         $show = false;
         if ($user_role === 'Admin') {
             $show = true;
-        } elseif ($user_role === 'Supervisor') {
+        } elseif ($user_role === 'Supervisor' || $user_role === 'C-Suite') {
             $show = in_array($row['project'], $allowed_projects) || ($row['submitted_by'] === $username);
         } elseif ($user_role === 'Employee') {
             $show = ($row['submitted_by'] === $username);

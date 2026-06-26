@@ -437,7 +437,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
             signup_id = int(data.get('id', 0))
             action = data.get('action', '')
             role = data.get('role', 'Viewer')
-            if role not in ['Admin', 'Supervisor', 'Employee', 'Viewer']:
+            if role not in ['Admin', 'C-Suite', 'Supervisor', 'Employee', 'Viewer']:
                 role = 'Viewer'
             
             success = False
@@ -470,7 +470,7 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 success = False
                 message = "User not found."
-                if user_id > 0 and new_role in ['Admin', 'Supervisor', 'Employee', 'Viewer']:
+                if user_id > 0 and new_role in ['Admin', 'C-Suite', 'Supervisor', 'Employee', 'Viewer']:
                     for u in MOCK_USERS:
                         if u['id'] == user_id:
                             u['role'] = new_role

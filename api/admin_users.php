@@ -39,7 +39,7 @@ if ($method === 'GET') {
     $userId = (int)($data['user_id'] ?? 0);
     $newRole = trim($data['role'] ?? '');
 
-    $allowedRoles = ['Admin', 'Supervisor', 'Employee', 'Viewer'];
+    $allowedRoles = ['Admin', 'C-Suite', 'Supervisor', 'Employee', 'Viewer'];
     if ($userId <= 0 || !in_array($newRole, $allowedRoles)) {
         http_response_code(400);
         echo json_encode(["success" => false, "message" => "Invalid parameters."]);

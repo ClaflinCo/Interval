@@ -13,9 +13,9 @@ if (empty($username)) {
     exit;
 }
 
-if ($user_role !== 'Supervisor') {
+if ($user_role !== 'Supervisor' && $user_role !== 'C-Suite') {
     http_response_code(403);
-    echo json_encode(["success" => false, "message" => "Only Supervisors can request project changes."]);
+    echo json_encode(["success" => false, "message" => "Only Supervisors and C-Suite can request project changes."]);
     exit;
 }
 
@@ -84,7 +84,7 @@ if (!$stmt) {
 
 $type = 'warning';
 $title = "Project Change Request: " . $project;
-$msg = "Supervisor " . $username . " requested: " . $requestType . ". Details: " . $details;
+$msg = $user_role . " " . $username . " requested: " . $requestType . ". Details: " . $details;
 $month = null;
 
 foreach ($admins as $admin) {

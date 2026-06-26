@@ -43,8 +43,8 @@ if (empty($allotmentsToSave)) {
 }
 
 // Only Admin and Supervisor can save allotments
-if ($role !== 'Admin' && $role !== 'Supervisor') {
-    echo json_encode(["success" => false, "message" => "Unauthorized. Only Admins and Supervisors can save allotments."]);
+if ($role !== 'Admin' && $role !== 'Supervisor' && $role !== 'C-Suite') {
+    echo json_encode(["success" => false, "message" => "Unauthorized. Only Admins, Supervisors, and C-Suite can save allotments."]);
     exit;
 }
 
@@ -57,7 +57,7 @@ foreach ($allotmentsToSave as $item) {
     $allot = $item['allotment'];
     
     // For Supervisor, check if they have access to this project
-    if ($role === 'Supervisor') {
+    if ($role === 'Supervisor' || $role === 'C-Suite') {
         $accessStmt = $conn->prepare("SELECT assigned, created_by FROM projects WHERE name = ?");
         $accessStmt->bind_param("s", $proj);
         $accessStmt->execute();

@@ -41,7 +41,7 @@ if ($method === 'GET') {
     $id = (int)($data['id'] ?? 0);
     $action = trim($data['action'] ?? ''); // 'approve' or 'reject'
     $role = trim($data['role'] ?? 'Viewer');
-    $validRoles = ['Admin', 'Supervisor', 'Employee', 'Viewer'];
+    $validRoles = ['Admin', 'C-Suite', 'Supervisor', 'Employee', 'Viewer'];
     if (!in_array($role, $validRoles)) {
         $role = 'Viewer';
     }

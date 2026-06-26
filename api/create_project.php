@@ -37,8 +37,8 @@ try {
     }
 
     // Only Admin and Supervisor can create projects
-    if ($user_role !== 'Admin' && $user_role !== 'Supervisor') {
-        throw new Exception("Unauthorized. Only Admins and Supervisors can create projects.");
+    if ($user_role !== 'Admin' && $user_role !== 'Supervisor' && $user_role !== 'C-Suite') {
+        throw new Exception("Unauthorized. Only Admins, Supervisors, and C-Suite can create projects.");
     }
 
     $input = file_get_contents("php://input");
@@ -66,7 +66,7 @@ try {
     }
 
     // Admins and Supervisors must be in the assigned list
-    if ($user_role === 'Admin' || $user_role === 'Supervisor') {
+    if ($user_role === 'Admin' || $user_role === 'Supervisor' || $user_role === 'C-Suite') {
         $assigned_list = array_map('trim', explode(',', $assigned));
         // Remove empty strings
         $assigned_list = array_filter($assigned_list);

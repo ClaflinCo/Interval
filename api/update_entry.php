@@ -95,7 +95,7 @@ try {
             $can_delete = false;
             if ($user_role === 'Admin') {
                 $can_delete = true;
-            } elseif ($user_role === 'Supervisor') {
+            } elseif ($user_role === 'Supervisor' || $user_role === 'C-Suite') {
                 $has_proj_access = check_project_access($conn, $username, $user_role, $project);
                 $can_delete = ($owner === $username) || $has_proj_access;
             } elseif ($user_role === 'Employee') {
