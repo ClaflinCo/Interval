@@ -1529,6 +1529,7 @@ function updateProjectUI() {
     }
     fProject.innerHTML = '<option value="">— Select Project —</option>' + listToUse.map(opStr).join('');
     fProject.value = fProjectVal;
+    onProjectSelectChange();
   }
 
   const uiProjectFilter = document.getElementById('uiProjectFilter');
@@ -2649,7 +2650,10 @@ function toggleAddForm(){
     if(!editingId) {
       clearForm();
       const curProj=document.getElementById('uiProjectFilter').value;
-      if(curProj&&curProj!=='NEW_PROJECT')document.getElementById('fProject').value=curProj;
+      if(curProj&&curProj!=='NEW_PROJECT') {
+        document.getElementById('fProject').value=curProj;
+        onProjectSelectChange();
+      }
       const vn=document.getElementById('viewerFormNote'),hf=document.getElementById('hoursField');
       // All roles save directly — no pending approval workflow
       vn.style.display='none';
@@ -2685,6 +2689,8 @@ function onProjectSelectChange() {
   const fService = document.getElementById('fService');
   if (!fProject || !fService) return;
   const pName = fProject.value;
+  
+  const curServiceVal = fService.value;
   fService.innerHTML = '<option value="">— Select Service —</option>';
   
   if (pName) {
@@ -2704,6 +2710,10 @@ function onProjectSelectChange() {
       opt.textContent = s;
       fService.appendChild(opt);
     });
+    
+    if (curServiceVal) {
+      fService.value = curServiceVal;
+    }
   }
 }
 function onTimeChange(){if(!isHoursOverride)autoCalcHours();updateCalcPreview();}
