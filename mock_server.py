@@ -5,11 +5,11 @@ PORT = 8000
 MOCK_DATA = {
     "projects": ["vCIO", "Shadow IT", "Network Admin", "Professional Services", "IT Project Manager"],
     "projectsMeta": {
-        "vCIO": {"assigned": "admin, employee", "customer": "Thrive LLC", "duration": 12, "created_by": "admin"},
-        "Shadow IT": {"assigned": "admin", "customer": "Shadow Corp", "duration": 6, "created_by": "admin"},
-        "Network Admin": {"assigned": "admin, employee", "customer": "Netlink LLC", "duration": 12, "created_by": "admin"},
-        "Professional Services": {"assigned": "admin", "customer": "Client Services", "duration": 1, "created_by": "admin"},
-        "IT Project Manager": {"assigned": "admin", "customer": "Project Corp", "duration": 12, "created_by": "admin"}
+        "vCIO": {"assigned": "admin, employee", "customer": "Thrive LLC", "duration": 12, "created_by": "admin", "services": "vCIO, Professional Services"},
+        "Shadow IT": {"assigned": "admin", "customer": "Shadow Corp", "duration": 6, "created_by": "admin", "services": "Shadow IT, Professional Services"},
+        "Network Admin": {"assigned": "admin, employee", "customer": "Netlink LLC", "duration": 12, "created_by": "admin", "services": "Network Admin, Professional Services"},
+        "Professional Services": {"assigned": "admin", "customer": "Client Services", "duration": 1, "created_by": "admin", "services": "Professional Services"},
+        "IT Project Manager": {"assigned": "admin", "customer": "Project Corp", "duration": 12, "created_by": "admin", "services": "IT Project Manager, Professional Services"}
     },
     "allotments": {
         "June": {"vCIO": 30.0, "Shadow IT": 40.0, "Network Admin": 50.0, "Professional Services": 0.0, "IT Project Manager": 0.0}
@@ -52,6 +52,13 @@ MOCK_DATA = {
             "completed": False,
             "time": "Jun 12, 9:00 AM"
         }
+    ],
+    "services": [
+        {"id": 1, "service": "vCIO", "created_by": "System"},
+        {"id": 2, "service": "Shadow IT", "created_by": "System"},
+        {"id": 3, "service": "Professional Services", "created_by": "System"},
+        {"id": 4, "service": "Network Admin", "created_by": "System"},
+        {"id": 5, "service": "IT Project Manager", "created_by": "System"}
     ]
 }
 
