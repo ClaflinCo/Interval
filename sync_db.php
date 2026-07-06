@@ -12,6 +12,22 @@ if (!file_exists($configPath)) {
 }
 require_once $configPath;
 
+// Protect sync_db.php behind an admin-only check when accessed directly via URL
+if (realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
+    $bootstrapPath = file_exists('api/bootstrap.php') ? 'api/bootstrap.php' : '../api/bootstrap.php';
+    if (!file_exists($bootstrapPath)) {
+        $bootstrapPath = 'bootstrap.php';
+    }
+    require_once $bootstrapPath;
+
+    if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
+        http_response_code(403);
+        header("Content-Type: text/plain");
+        echo "403 Forbidden - Admin access required.";
+        exit;
+    }
+}
+
 function log_sync($msg) {
     if (!defined('SILENT_SYNC') || !SILENT_SYNC) {
         echo $msg;
