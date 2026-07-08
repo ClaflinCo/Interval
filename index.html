@@ -72,12 +72,13 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family: 'Open Sans', 'Segoe UI', sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
 /* LOGIN */
-#loginPage{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding-top:12vh;background:var(--color-navy);position:relative;overflow:hidden}
-#loginPage::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
-.login-card{background:white;border-radius:var(--radius-xl);padding:56px 48px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);position:relative;z-index:1;animation:fadeUp .5s ease}
+#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--color-navy);position:relative;overflow:hidden;padding:40px 16px}
+#loginPage::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19,20h2 M20,19v2' stroke='rgba(255,255,255,0.08)' stroke-width='1.5'/%3E%3C/svg%3E")}
+.login-card{background:#ffffff;border-radius:var(--radius-xl);padding:56px 48px;width:100%;max-width:540px;box-shadow:var(--shadow-lg);position:relative;z-index:1;animation:fadeUp .5s ease;transition:max-width 0.3s ease, padding 0.3s ease}
+.login-card.landing{max-width:640px;padding:72px 64px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 .login-logos{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:32px;padding-bottom:28px;border-bottom:1px solid var(--border)}
-.logo-claflin{width:80px;height:80px;border-radius:10px;object-fit:cover}
+.logo-claflin{width:80px;height:80px;border-radius:10px;object-fit:contain}
 .logo-fp{width:68px;height:68px;border-radius:50%;object-fit:cover}
 .logo-divider{width:1px;height:60px;background:var(--border)}
 .login-title{font-size:1.85rem;color:var(--navy);text-align:center;margin-bottom:8px}
@@ -87,15 +88,17 @@ body{font-family: 'Open Sans', 'Segoe UI', sans-serif;background:var(--bg);color
 .fg-login input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:8px;font-family: 'Open Sans', 'Segoe UI', sans-serif;font-size:1.05rem;color:var(--ink);transition:border-color .15s;background:var(--bg)}
 .fg-login input:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 4px rgba(0,156,222,.2);background:var(--bg-input-focus)}
 .login-err{color:var(--red);font-size:.9rem;margin-bottom:14px;text-align:center;display:none}
-.btn-login{width:100%;padding:15px;background:var(--navy);color:white;border:none;border-radius:8px;font-family: 'Open Sans', 'Segoe UI', sans-serif;font-size:1.05rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:background .15s}
+.btn-login{width:100%;padding:13px 20px;font-size:0.95rem;background:var(--navy);color:white;border:none;border-radius:var(--radius-md);font-family:'Open Sans', sans-serif;font-weight:600;cursor:pointer;letter-spacing:.02em;transition:background .15s, transform 0.1s ease}
 .btn-login:hover{background:var(--navy2)}
+.btn-login:active{transform:scale(0.98)}
+.login-card.landing .btn-login{padding:16px 24px;font-size:1.05rem}
 .login-hint{text-align:center;color:var(--ink2);font-size:.85rem;margin-top:18px}
 /* APP */
 #app{display:none}
 /* HEADER */
 header{background:var(--navy);padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:72px;box-shadow:0 2px 12px rgba(0,0,0,.2);position:sticky;top:0;z-index:50}
 .header-brand{display:flex;align-items:center;gap:14px}
-.header-logo-claflin{width:50px;height:50px;border-radius:8px;object-fit:cover}
+.header-logo-claflin{width:50px;height:50px;border-radius:8px;object-fit:contain}
 .header-logo-fp{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.25)}
 .header-divider{width:1px;height:34px;background:rgba(255,255,255,.2)}
 .header-title{color:white;font-size:1.05rem;line-height:1.2}
@@ -291,9 +294,9 @@ tbody td{padding:10px 13px;vertical-align:middle}
 
 <!-- LOGIN -->
 <div id="loginPage">
-  <div class="login-card">
+  <div class="login-card landing">
     <div class="login-logos" style="border-bottom: none; padding-bottom: 0; margin-bottom: 20px;">
-      <img class="logo-claflin" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDwhLS0gQ2xvY2sgT3V0ZXIgUmluZyAtLT4KICA8Y2lyY2xlIGN4PSI1MTIiIGN5PSIyMDAiIHI9IjE1MCIgZmlsbD0iIzA1Mjk0QiIgLz4KICAKICA8IS0tIENsb2NrIEZhY2UgLS0+CiAgPGNpcmNsZSBjeD0iNTEyIiBjeT0iMjAwIiByPSIxMjAiIGZpbGw9IiNGRkZGRkYiIC8+CiAgCiAgPCEtLSBDbG9jayBUaWNrcyAtLT4KICA8ZyBzdHJva2U9IiMwNTI5NEIiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDMwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDYwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDkwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDEyMCwgNTEyLCAyMDApIiAvPgogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgxNTAsIDUxMiwgMjAwKSIgLz4KICAgIDxsaW5lIHgxPSI1MTIiIHkxPSI4OCIgeDI9IjUxMiIgeTI9IjEwOCIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDIxMCwgNTEyLCAyMDApIiAvPgogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgyNDAsIDUxMiwgMjAwKSIgLz4KICAgIDxsaW5lIHgxPSI1MTIiIHkxPSI4OCIgeDI9IjUxMiIgeTI9IjEwOCIgdHJhbnNmb3JtPSJyb3RhdGUoMjcwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDMwMCwgNTEyLCAyMDApIiAvPgogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgzMzAsIDUxMiwgMjAwKSIgLz4KICA8L2c+CiAgCiAgPCEtLSBDbG9jayBIYW5kcyAtLT4KICA8IS0tIEhvdXIgaGFuZCBwb2ludGluZyB0byAxMCBvJ2Nsb2NrIC0tPgogIDxsaW5lIHgxPSI1MTIiIHkxPSIyMDAiIHgyPSI1MTIiIHkyPSIxMzUiIHN0cm9rZT0iIzA1Mjk0QiIgc3Ryb2tlLXdpZHRoPSIxNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiB0cmFuc2Zvcm09InJvdGF0ZSgtNjAsIDUxMiwgMjAwKSIgLz4KICA8IS0tIE1pbnV0ZSBoYW5kIHBvaW50aW5nIHRvIDIgbydjbG9jayAtLT4KICA8bGluZSB4MT0iNTEyIiB5MT0iMjAwIiB4Mj0iNTEyIiB5Mj0iMTEwIiBzdHJva2U9IiMwNTI5NEIiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgdHJhbnNmb3JtPSJyb3RhdGUoNjAsIDUxMiwgMjAwKSIgLz4KICAKICA8IS0tIENlbnRlciBDYXAgLS0+CiAgPGNpcmNsZSBjeD0iNTEyIiBjeT0iMjAwIiByPSIxNSIgZmlsbD0iIzA1Mjk0QiIgLz4KICAKICA8IS0tIFNsYWIgU2VyaWYgJ2knIEJvZHkgLS0+CiAgPCEtLSBTdGVtIC0tPgogIDxyZWN0IHg9IjQwMiIgeT0iNDEwIiB3aWR0aD0iMjIwIiBoZWlnaHQ9IjQ2MCIgZmlsbD0iIzA1Mjk0QiIgLz4KICA8IS0tIFRvcCBMZWZ0IFNlcmlmIEZsYWcgLS0+CiAgPHJlY3QgeD0iMjgyIiB5PSI0MTAiIHdpZHRoPSIxMjAiIGhlaWdodD0iNzAiIGZpbGw9IiMwNTI5NEIiIC8+CiAgPCEtLSBCb3R0b20gU2VyaWYgQmFzZSAtLT4KICA8cmVjdCB4PSIyMzIiIHk9Ijg3MCIgd2lkdGg9IjU2MCIgaGVpZ2h0PSI3MCIgZmlsbD0iIzA1Mjk0QiIgLz4KPC9zdmc+Cg==" alt="Interval" style="height: 84px; width: auto; border-radius: var(--radius-md); object-fit: contain; box-shadow: var(--shadow-sm);">
+      <img class="logo-claflin" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDwhLS0gQ2xvY2sgT3V0ZXIgUmluZyAtLT4KICA8Y2lyY2xlIGN4PSI1MTIiIGN5PSIyMDAiIHI9IjE1MCIgZmlsbD0iIzA1Mjk0QiIgLz4KICAKICA8IS0tIENsb2NrIEZhY2UgLS0+CiAgPGNpcmNsZSBjeD0iNTEyIiBjeT0iMjAwIiByPSIxMjAiIGZpbGw9IiNGRkZGRkYiIC8+CiAgCiAgPCEtLSBDbG9jayBUaWNrcyAtLT4KICA8ZyBzdHJva2U9IiMwNTI5NEIiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCI+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDMwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDYwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDkwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDEyMCwgNTEyLCAyMDApIiAvPgogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgxNTAsIDUxMiwgMjAwKSIgLz4KICAgIDxsaW5lIHgxPSI1MTIiIHkxPSI4OCIgeDI9IjUxMiIgeTI9IjEwOCIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDIxMCwgNTEyLCAyMDApIiAvPgogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgyNDAsIDUxMiwgMjAwKSIgLz4KICAgIDxsaW5lIHgxPSI1MTIiIHkxPSI4OCIgeDI9IjUxMiIgeTI9IjEwOCIgdHJhbnNmb3JtPSJyb3RhdGUoMjcwLCA1MTIsIDIwMCkiIC8+CiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDMwMCwgNTEyLCAyMDApIiAvPgogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgzMzAsIDUxMiwgMjAwKSIgLz4KICA8L2c+CiAgCiAgPCEtLSBDbG9jayBIYW5kcyAtLT4KICA8IS0tIEhvdXIgaGFuZCBwb2ludGluZyB0byAxMCBvJ2Nsb2NrIC0tPgogIDxsaW5lIHgxPSI1MTIiIHkxPSIyMDAiIHgyPSI1MTIiIHkyPSIxMzUiIHN0cm9rZT0iIzA1Mjk0QiIgc3Ryb2tlLXdpZHRoPSIxNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiB0cmFuc2Zvcm09InJvdGF0ZSgtNjAsIDUxMiwgMjAwKSIgLz4KICA8IS0tIE1pbnV0ZSBoYW5kIHBvaW50aW5nIHRvIDIgbydjbG9jayAtLT4KICA8bGluZSB4MT0iNTEyIiB5MT0iMjAwIiB4Mj0iNTEyIiB5Mj0iMTEwIiBzdHJva2U9IiMwNTI5NEIiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgdHJhbnNmb3JtPSJyb3RhdGUoNjAsIDUxMiwgMjAwKSIgLz4KICAKICA8IS0tIENlbnRlciBDYXAgLS0+CiAgPGNpcmNsZSBjeD0iNTEyIiBjeT0iMjAwIiByPSIxNSIgZmlsbD0iIzA1Mjk0QiIgLz4KICAKICA8IS0tIFNsYWIgU2VyaWYgJ2knIEJvZHkgLS0+CiAgPCEtLSBTdGVtIC0tPgogIDxyZWN0IHg9IjQwMiIgeT0iNDEwIiB3aWR0aD0iMjIwIiBoZWlnaHQ9IjQ2MCIgZmlsbD0iIzA1Mjk0QiIgLz4KICA8IS0tIFRvcCBMZWZ0IFNlcmlmIEZsYWcgLS0+CiAgPHJlY3QgeD0iMjgyIiB5PSI0MTAiIHdpZHRoPSIxMjAiIGhlaWdodD0iNzAiIGZpbGw9IiMwNTI5NEIiIC8+CiAgPCEtLSBCb3R0b20gU2VyaWYgQmFzZSAtLT4KICA8cmVjdCB4PSIyMzIiIHk9Ijg3MCIgd2lkdGg9IjU2MCIgaGVpZ2h0PSI3MCIgZmlsbD0iIzA1Mjk0QiIgLz4KPC9zdmc+Cg==" alt="Interval" style="height: 84px; width: auto; border-radius: var(--radius-md); object-fit: contain;">
     </div>
     <h1 class="login-title">Interval</h1>
     <p class="login-sub">Sign in to access the portal</p>
@@ -1237,6 +1240,7 @@ function showLandingView() {
   document.getElementById('loginFormView').style.display = 'none';
   document.getElementById('signupFormView').style.display = 'none';
   document.getElementById('signupSuccessView').style.display = 'none';
+  document.querySelector('.login-card').classList.add('landing');
   
   document.querySelector('.login-title').textContent = 'Interval';
   document.querySelector('.login-sub').textContent = 'Sign in to access the portal';
@@ -1247,6 +1251,7 @@ function showLoginView() {
   document.getElementById('loginFormView').style.display = 'block';
   document.getElementById('signupFormView').style.display = 'none';
   document.getElementById('signupSuccessView').style.display = 'none';
+  document.querySelector('.login-card').classList.remove('landing');
   
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
@@ -1268,6 +1273,7 @@ function showSignupView() {
   document.getElementById('loginFormView').style.display = 'none';
   document.getElementById('signupFormView').style.display = 'block';
   document.getElementById('signupSuccessView').style.display = 'none';
+  document.querySelector('.login-card').classList.remove('landing');
   
   document.getElementById('signupEmail').value = '';
   document.getElementById('signupUser').value = '';
@@ -1293,6 +1299,7 @@ function showSignupSuccessView() {
   document.getElementById('loginFormView').style.display = 'none';
   document.getElementById('signupFormView').style.display = 'none';
   document.getElementById('signupSuccessView').style.display = 'block';
+  document.querySelector('.login-card').classList.remove('landing');
   
   document.querySelector('.login-title').textContent = 'Request Sent';
   document.querySelector('.login-sub').textContent = 'Account pending review';
