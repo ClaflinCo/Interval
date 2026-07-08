@@ -106,7 +106,7 @@ def generate_workbook(payload):
         # ── Title row 2 D–H ───────────────────────────────
         ws.merge_cells("D2:H2")
         tc = ws["D2"]
-        tc.value = "CLAFLIN INTERVAL 2026"
+        tc.value = "BY CLAFLIN A.L.M"
         tc.font  = Font(name="Calibri", bold=True, size=16, color=NAVY)
         tc.alignment = s_align("center", "center")
 
