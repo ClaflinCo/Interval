@@ -5,11 +5,11 @@ PORT = 8000
 MOCK_DATA = {
     "projects": ["vCIO", "Shadow IT", "Network Admin", "Professional Services", "IT Project Manager"],
     "projectsMeta": {
-        "vCIO": {"assigned": "admin, employee", "customer": "Thrive LLC", "duration": 12, "created_by": "admin", "services": "vCIO, Professional Services"},
-        "Shadow IT": {"assigned": "admin", "customer": "Shadow Corp", "duration": 6, "created_by": "admin", "services": "Shadow IT, Professional Services"},
-        "Network Admin": {"assigned": "admin, employee", "customer": "Netlink LLC", "duration": 12, "created_by": "admin", "services": "Network Admin, Professional Services"},
-        "Professional Services": {"assigned": "admin", "customer": "Client Services", "duration": 1, "created_by": "admin", "services": "Professional Services"},
-        "IT Project Manager": {"assigned": "admin", "customer": "Project Corp", "duration": 12, "created_by": "admin", "services": "IT Project Manager, Professional Services"}
+        "vCIO": {"assigned": "admin, employee", "customer": "Thrive LLC", "duration": 12, "created_by": "admin", "services": "vCIO, Professional Services", "active": True},
+        "Shadow IT": {"assigned": "admin", "customer": "Shadow Corp", "duration": 6, "created_by": "admin", "services": "Shadow IT, Professional Services", "active": True},
+        "Network Admin": {"assigned": "admin, employee", "customer": "Netlink LLC", "duration": 12, "created_by": "admin", "services": "Network Admin, Professional Services", "active": True},
+        "Professional Services": {"assigned": "admin", "customer": "Client Services", "duration": 1, "created_by": "admin", "services": "Professional Services", "active": True},
+        "IT Project Manager": {"assigned": "admin", "customer": "Project Corp", "duration": 12, "created_by": "admin", "services": "IT Project Manager, Professional Services", "active": True}
     },
     "allotments": {
         "June": {"vCIO": 30.0, "Shadow IT": 40.0, "Network Admin": 50.0, "Professional Services": 0.0, "IT Project Manager": 0.0}
@@ -252,7 +252,8 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                     "customer": customer,
                     "duration": duration,
                     "created_by": "admin",
-                    "services": services
+                    "services": services,
+                    "active": True
                 }
                 
                 # Always initialize 12 monthly allotments (active duration months get allotment, others get 0)

@@ -1526,7 +1526,7 @@ function updateProjectUI() {
   };
   const isAdmin = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'admin');
   const monthProjects = getActiveProjectsForMonth(currentMonth);
-  const dropdownProjects = isAdmin ? PROJECTS : monthProjects;
+  const dropdownProjects = (isAdmin ? PROJECTS : monthProjects).filter(p => PROJECTS_META[p] && PROJECTS_META[p].active === true);
   
   const editingEntry = editingId ? (state[currentMonth]?.entries || []).find(x=>String(x.id)===String(editingId)) : null;
   const editingProject = editingEntry ? editingEntry.project : '';
@@ -2529,7 +2529,7 @@ function toggleAllotmentEdit(){
     
     const container = document.getElementById('allotmentInputsContainer');
     container.innerHTML = '';
-    PROJECTS.forEach(p => {
+    PROJECTS.filter(p => PROJECTS_META[p] && PROJECTS_META[p].active === true).forEach(p => {
       const div = document.createElement('div');
       div.style.display = 'flex';
       div.style.alignItems = 'center';
@@ -2612,7 +2612,7 @@ async function saveAllotment(){
   let changed = [];
   let newValues = {};
 
-  PROJECTS.forEach(p => {
+  PROJECTS.filter(p => PROJECTS_META[p] && PROJECTS_META[p].active === true).forEach(p => {
     const el = document.getElementById('allotmentInput_' + p.replace(/\s+/g,'_'));
     if(!el) return;
     const val = parseFloat(el.value);
@@ -3295,7 +3295,7 @@ function renderAdminProjectCards() {
   list.innerHTML = '';
   const searchVal = document.getElementById('apmSearch').value.toLowerCase().trim();
   
-  PROJECTS.forEach(p => {
+  PROJECTS.filter(p => PROJECTS_META[p] && PROJECTS_META[p].active === true).forEach(p => {
     const meta = PROJECTS_META[p] || {};
     const cust = meta.customer || '';
     const createdBy = meta.created_by || 'System';

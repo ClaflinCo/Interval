@@ -52,7 +52,8 @@ if ($projRes) {
                     "duration" => (int)($row['duration'] ?? 1),
                     "allotment" => (float)($row['allotment'] ?? 0.00),
                     "created_by" => $row['created_by'] ?? '',
-                    "services" => $row['services'] ?? ''
+                    "services" => $row['services'] ?? '',
+                    "active" => true
                 ];
             }
         }
@@ -142,7 +143,8 @@ if ($user_role === 'Admin') {
                         "customer" => '',
                         "duration" => 1,
                         "created_by" => '',
-                        "services" => ''
+                        "services" => '',
+                        "active" => false
                     ];
                 }
             }
