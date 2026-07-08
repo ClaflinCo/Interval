@@ -95,13 +95,13 @@ try {
             $userCheck->close();
 
             if ($success) {
-                // 2. Insert into users table with selected role
-                $insStmt = $conn->prepare("INSERT INTO users (username, password_hash, role, display_name) VALUES (?, ?, ?, ?)");
+                // 2. Insert into users table with selected role and email
+                $insStmt = $conn->prepare("INSERT INTO users (username, password_hash, role, display_name, email) VALUES (?, ?, ?, ?, ?)");
                 if (!$insStmt) {
                     $success = false;
                     $errorMsg = "Prepare insert user stmt failed: " . $conn->error;
                 } else {
-                    $insStmt->bind_param("ssss", $request['username'], $request['password_hash'], $role, $request['username']);
+                    $insStmt->bind_param("sssss", $request['username'], $request['password_hash'], $role, $request['username'], $request['email']);
                     if (!$insStmt->execute()) {
                         $success = false;
                         $errorMsg = "Failed to create user account: " . $insStmt->error;

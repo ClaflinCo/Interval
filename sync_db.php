@@ -254,6 +254,7 @@ function addColumn($conn, $table, $column, $type) {
 
 addColumn($conn, 'users', 'role', "VARCHAR(20) DEFAULT 'Viewer'");
 addColumn($conn, 'users', 'display_name', "VARCHAR(100)");
+addColumn($conn, 'users', 'email', "VARCHAR(255) DEFAULT NULL");
 
 // Add columns to project_allotments table
 addColumn($conn, 'project_allotments', 'assigned', "TEXT DEFAULT NULL");
