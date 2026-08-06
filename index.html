@@ -2385,6 +2385,30 @@ function renderMonth(){
       totalAllotment += pAllot;
       totalUsed += pUsed;
 
+      // Calculate subscription allotments and usage for this project
+      let pSubAllot = 0;
+      const meta = PROJECTS_META[pName] || {};
+      const subscriptionHours = meta.subscription_hours || '';
+      if (subscriptionHours) {
+        subscriptionHours.split(',').forEach(part => {
+          const subparts = part.trim().split('_');
+          if (subparts.length >= 2) {
+            pSubAllot += parseFloat(subparts.pop());
+          }
+        });
+      }
+      
+      const pSubUsed = md.entries.filter(e => {
+        if (e.project !== pName) return false;
+        const entryServices = (e.services || '').split(',').map(x => x.trim());
+        return entryServices.some(sName => {
+          const sObj = SERVICES.find(x => x.service === sName);
+          return sObj && !!sObj.is_subscription;
+        });
+      }).reduce((s, e) => s + calcHours(e), 0);
+      
+      const pSubRem = pSubAllot - pSubUsed;
+
       const isSingle = statsList.length === 1;
       const rowStyle = isSingle 
         ? 'display:flex; justify-content:space-between; align-items:center; font-size:1.5rem; font-weight:700;' 
@@ -2392,9 +2416,19 @@ function renderMonth(){
       const cust = PROJECTS_META[pName] && PROJECTS_META[pName].customer ? ` (${PROJECTS_META[pName].customer})` : '';
       const label = `<span>${esc(pName)}${esc(cust)}</span>`;
       
-      allotHtml += `<div style="${rowStyle}">${label}<span>${pAllot}</span></div>`;
-      usedHtml += `<div style="${rowStyle}">${label}<span>${fmtH(pUsed)}</span></div>`;
-      remHtml += `<div style="${rowStyle}">${label}<span class="${pRem < 0 ? 'exceeded' : (pRem < 5 ? 'warn' : '')}">${fmtH(pRem)}</span></div>`;
+      const allotVal = pSubAllot > 0 
+        ? `${pAllot} <span style="font-size:0.75em; color:var(--green); font-weight:bold;">(${pSubAllot} sub)</span>` 
+        : `${pAllot}`;
+      const usedVal = pSubAllot > 0 
+        ? `${fmtH(pUsed)} <span style="font-size:0.75em; color:var(--green); font-weight:bold;">(${fmtH(pSubUsed)} sub)</span>` 
+        : `${fmtH(pUsed)}`;
+      const remVal = pSubAllot > 0 
+        ? `${fmtH(pRem)} <span style="font-size:0.75em; color:var(--green); font-weight:bold;">(${fmtH(pSubRem)} sub)</span>` 
+        : `${fmtH(pRem)}`;
+
+      allotHtml += `<div style="${rowStyle}">${label}<span>${allotVal}</span></div>`;
+      usedHtml += `<div style="${rowStyle}">${label}<span>${usedVal}</span></div>`;
+      remHtml += `<div style="${rowStyle}">${label}<span class="${pRem < 0 ? 'exceeded' : (pRem < 5 ? 'warn' : '')}">${remVal}</span></div>`;
     });
   }
 
@@ -2411,9 +2445,31 @@ function renderMonth(){
 
   // Calculate running balances per project for the month
   let projectBalances = {};
+  let subProjectBalances = {};
+  
+  PROJECTS.forEach(p => {
+    subProjectBalances[p] = {};
+    const meta = PROJECTS_META[p] || {};
+    const subscriptionHours = meta.subscription_hours || '';
+    if (subscriptionHours) {
+      subscriptionHours.split(',').forEach(part => {
+        const subparts = part.trim().split('_');
+        if (subparts.length >= 2) {
+          const hours = parseFloat(subparts.pop());
+          const service = subparts.join('_');
+          subProjectBalances[p][service] = hours;
+        }
+      });
+    }
+  });
+
   if (sortDir === 'desc') {
     PROJECTS.forEach(p => {
       projectBalances[p] = md.entries.filter(e => e.project === p).reduce((s, e) => s + calcHours(e), 0);
+      for (const service in subProjectBalances[p]) {
+        const subUsedThisMonth = md.entries.filter(e => e.project === p && (e.services || '').trim() === service).reduce((s, e) => s + calcHours(e), 0);
+        subProjectBalances[p][service] = subProjectBalances[p][service] - subUsedThisMonth;
+      }
     });
   } else {
     PROJECTS.forEach(p => {
@@ -2437,6 +2493,19 @@ function renderMonth(){
       projectBalances[e.project] += h;
       rem = pAllot - projectBalances[e.project];
     }
+
+    const entryService = (e.services || '').trim();
+    let subRem = null;
+    if (subProjectBalances[e.project] && subProjectBalances[e.project][entryService] !== undefined) {
+      if (sortDir === 'desc') {
+        subProjectBalances[e.project][entryService] += h;
+        subRem = subProjectBalances[e.project][entryService];
+      } else {
+        subProjectBalances[e.project][entryService] -= h;
+        subRem = subProjectBalances[e.project][entryService];
+      }
+    }
+
     const tr=document.createElement('tr');
     
     const tdProject = document.createElement('td');
@@ -2446,7 +2515,16 @@ function renderMonth(){
     tr.appendChild(tdProject);
     
     const tdServices = document.createElement('td');
-    tdServices.textContent = e.services || '—';
+    const entryServices = (e.services || '').split(',').map(x => x.trim());
+    const hasSubService = entryServices.some(sName => {
+      const sObj = SERVICES.find(x => x.service === sName);
+      return sObj && !!sObj.is_subscription;
+    });
+    if (hasSubService) {
+      tdServices.innerHTML = `${esc(e.services || '')} <span style="color:var(--green); font-weight:700; font-size:0.65rem; padding: 2px 4px; background: var(--green-light); border-radius: 4px; margin-left: 4px;">SUB</span>`;
+    } else {
+      tdServices.textContent = e.services || '—';
+    }
     tr.appendChild(tdServices);
     
     const tdDate = document.createElement('td');
@@ -2493,8 +2571,14 @@ function renderMonth(){
     const tdTotalHours = document.createElement('td');
     tdTotalHours.className = 'td-hours td-center';
     tdTotalHours.style.color = 'var(--navy2)';
+    let hText = fmtH(h);
+    if (subRem !== null) {
+      tdTotalHours.style.color = 'var(--green)';
+      tdTotalHours.style.fontWeight = 'bold';
+      hText += ' (sub)';
+    }
     if (over !== null) {
-      const hoursText = document.createTextNode(fmtH(h));
+      const hoursText = document.createTextNode(hText);
       tdTotalHours.appendChild(hoursText);
       
       const detailsDiv = document.createElement('div');
@@ -2503,7 +2587,7 @@ function renderMonth(){
       detailsDiv.textContent = `(${fmtH(over)} x ${sc})`;
       tdTotalHours.appendChild(detailsDiv);
     } else {
-      tdTotalHours.textContent = fmtH(h);
+      tdTotalHours.textContent = hText;
     }
     tr.appendChild(tdTotalHours);
     
@@ -2514,7 +2598,11 @@ function renderMonth(){
     
     const tdRem = document.createElement('td');
     tdRem.className = 'td-rem' + (rem < 0 ? ' exceeded' : (rem < 5 ? ' warn' : ''));
-    tdRem.textContent = fmtH(rem);
+    if (subRem !== null) {
+      tdRem.innerHTML = `${fmtH(rem)} <div style="font-size:0.65rem; color:var(--green); font-weight:bold;">(${fmtH(subRem)} sub)</div>`;
+    } else {
+      tdRem.textContent = fmtH(rem);
+    }
     tr.appendChild(tdRem);
     
     const tdNotes = document.createElement('td');
@@ -3146,11 +3234,22 @@ function exportToCSV() {
   if(ss) fn += `_${ss.replace(/\s+/g, '_')}`;
   fn += `_${dateStr}.csv`;
 
-  const headers = ["Project", "Services", "Date", "Check In", "Check Out", "Staff", "# Staff", "Client", "Duration", "Billed Hours", "Status", "Subscription Allotment", "Notes"];
+  const headers = ["Project", "Services", "Date", "Check In", "Check Out", "Staff", "# Staff", "Client", "Duration", "Hours Allotted", "Subscription Hours Used", "Total Hours Used", "Status", "Notes"];
   let csv = headers.join(",") + "\n";
 
   data.forEach(m => {
     m.entries.forEach(e => {
+      const pAllot = m.allotments[e.project] !== undefined ? m.allotments[e.project] : 0;
+      
+      const entryServices = (e.services || '').split(',').map(x => x.trim());
+      const isSub = entryServices.some(sName => {
+        const sObj = SERVICES.find(x => x.service === sName);
+        return sObj && !!sObj.is_subscription;
+      });
+      
+      const billedHours = calcHours(e);
+      const subHoursUsed = isSub ? billedHours : 0.00;
+
       const row = [
         e.project || "",
         e.services || "",
@@ -3161,9 +3260,10 @@ function exportToCSV() {
         countStaff(e.staff),
         e.client || "",
         calcDuration(e).toFixed(2),
-        calcHours(e).toFixed(2),
+        pAllot.toFixed(2),
+        subHoursUsed.toFixed(2),
+        billedHours.toFixed(2),
         e.status || "",
-        e.subRemaining || "—",
         (e.notes || "").replace(/"/g, '""')
       ];
       csv += row.map(v => `"${v}"`).join(",") + "\n";
@@ -3556,6 +3656,7 @@ function selectAdminProject(p) {
   renderAdminProjectCards();
   
   const meta = PROJECTS_META[p] || {};
+  const isCompleted = !!meta.completed;
   document.getElementById('apmProjName').value = p;
   document.getElementById('apmCustomer').value = meta.customer || '';
   document.getElementById('apmAllotment').value = meta.allotment !== undefined ? meta.allotment : 30;
