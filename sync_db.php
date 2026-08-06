@@ -5,28 +5,35 @@ if (defined('SYNC_DB_RUN')) {
 }
 define('SYNC_DB_RUN', true);
 
+// Check authentication: allow if CLI, require Admin session if Web
+$isCli = (php_sapi_name() === 'cli');
+$isAdmin = false;
+
+if (!$isCli) {
+    $bootstrapPath = file_exists('api/bootstrap.php') ? 'api/bootstrap.php' : '../api/bootstrap.php';
+    if (!file_exists($bootstrapPath)) {
+        $bootstrapPath = 'bootstrap.php';
+    }
+    if (file_exists($bootstrapPath)) {
+        require_once $bootstrapPath;
+    }
+    
+    $isAdmin = (isset($_SESSION['username']) && isset($_SESSION['role']) && $_SESSION['role'] === 'Admin');
+}
+
+if (!$isCli && !$isAdmin) {
+    http_response_code(403);
+    header("Content-Type: text/plain");
+    echo "403 Forbidden - Admin or CLI access required.";
+    exit;
+}
+
 // Support relative path for config depending on where it was included from
 $configPath = file_exists('api/config.php') ? 'api/config.php' : '../api/config.php';
 if (!file_exists($configPath)) {
     $configPath = 'config.php';
 }
 require_once $configPath;
-
-// Protect sync_db.php behind an admin-only check when accessed directly via URL
-if (realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
-    $bootstrapPath = file_exists('api/bootstrap.php') ? 'api/bootstrap.php' : '../api/bootstrap.php';
-    if (!file_exists($bootstrapPath)) {
-        $bootstrapPath = 'bootstrap.php';
-    }
-    require_once $bootstrapPath;
-
-    if (!isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
-        http_response_code(403);
-        header("Content-Type: text/plain");
-        echo "403 Forbidden - Admin access required.";
-        exit;
-    }
-}
 
 function log_sync($msg) {
     if (!defined('SILENT_SYNC') || !SILENT_SYNC) {
@@ -47,10 +54,38 @@ $conn->query("
         assigned TEXT DEFAULT NULL,
         start_month VARCHAR(20) DEFAULT NULL,
         created_by VARCHAR(100) DEFAULT NULL,
+        subscription_hours TEXT DEFAULT NULL,
+        completed TINYINT(1) NOT NULL DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 log_sync("Checked projects table existence.<br>");
+
+// 1b. Ensure time_entries table structure and constraints
+$conn->query("
+    CREATE TABLE IF NOT EXISTS time_entries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        submitted_by VARCHAR(100) NOT NULL,
+        project VARCHAR(100) NOT NULL,
+        entry_date DATE NOT NULL,
+        check_in VARCHAR(20) NOT NULL,
+        check_out VARCHAR(20) NOT NULL,
+        staff_attended VARCHAR(255) DEFAULT NULL,
+        hours_override DECIMAL(10,2) DEFAULT NULL,
+        status VARCHAR(50) DEFAULT NULL,
+        client_contact VARCHAR(255) DEFAULT NULL,
+        notes TEXT DEFAULT NULL,
+        services VARCHAR(100) DEFAULT NULL,
+        approval_status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+        edit_of_id INT DEFAULT NULL,
+        KEY idx_submitted_by (submitted_by),
+        KEY idx_project (project),
+        KEY idx_entry_date (entry_date),
+        KEY idx_approval_status (approval_status),
+        KEY idx_edit_of_id (edit_of_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+");
+log_sync("Checked time_entries table existence.<br>");
 
 // 2. Ensure project_allotments table structure and constraints
 $conn->query("
@@ -144,10 +179,18 @@ $conn->query("
         id INT AUTO_INCREMENT PRIMARY KEY,
         service VARCHAR(100) NOT NULL UNIQUE,
         created_by VARCHAR(100) DEFAULT NULL,
+        is_subscription TINYINT(1) NOT NULL DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 log_sync("Checked services table existence.<br>");
+
+// Ensure is_subscription column exists in services table
+$r = $conn->query("SHOW COLUMNS FROM services LIKE 'is_subscription'");
+if ($r && $r->num_rows === 0) {
+    $conn->query("ALTER TABLE services ADD COLUMN is_subscription TINYINT(1) NOT NULL DEFAULT 0");
+    log_sync("Added column is_subscription to services table.<br>");
+}
 
 // Seed default services if empty
 $chk = $conn->query("SELECT COUNT(*) as count FROM services");
@@ -264,6 +307,8 @@ addColumn($conn, 'project_allotments', 'created_by', "VARCHAR(100) DEFAULT NULL"
 
 // Add services columns
 addColumn($conn, 'projects', 'services', "TEXT DEFAULT NULL");
+addColumn($conn, 'projects', 'subscription_hours', "TEXT DEFAULT NULL");
+addColumn($conn, 'projects', 'completed', "TINYINT(1) NOT NULL DEFAULT 0");
 addColumn($conn, 'time_entries', 'services', "VARCHAR(100) DEFAULT NULL");
 
 // Migrate/Add columns to notifications table

@@ -56,7 +56,8 @@ if ($method === 'GET') {
     $stmt = $conn->prepare("UPDATE users SET role = ? WHERE id = ?");
     if (!$stmt) {
         http_response_code(500);
-        echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+        error_log("Prepare statement failed in admin_users.php: " . $conn->error);
+        echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
         exit;
     }
 
@@ -64,7 +65,8 @@ if ($method === 'GET') {
     if ($stmt->execute()) {
         echo json_encode(["success" => true, "message" => "User role updated successfully."]);
     } else {
-        echo json_encode(["success" => false, "message" => "Failed to update user role: " . $stmt->error]);
+        error_log("Failed to update user role in admin_users.php: " . $stmt->error);
+        echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     }
     $stmt->close();
     exit;

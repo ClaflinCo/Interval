@@ -60,6 +60,15 @@ try {
     } else {
         $services = trim($servicesRaw);
     }
+    
+    $serviceAllotmentsRaw = $data['service_allotments'] ?? [];
+    $pairs = [];
+    if (is_array($serviceAllotmentsRaw)) {
+        foreach ($serviceAllotmentsRaw as $service => $hours) {
+            $pairs[] = trim($service) . "_" . floatval($hours);
+        }
+    }
+    $subscriptionHours = implode(", ", $pairs);
 
     if (empty($projectName) || empty($startMonth) || $duration < 1) {
         throw new Exception("Missing required fields (Project Name, Start Month, or Duration).");
@@ -95,23 +104,26 @@ try {
     $conn->begin_transaction();
 
     // Prepare statement to insert/update projects table
-    $projSql = "INSERT INTO projects (name, customer, duration, allotment, assigned, start_month, created_by, services) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
+    $projSql = "INSERT INTO projects (name, customer, duration, allotment, assigned, start_month, created_by, services, subscription_hours) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
                 ON DUPLICATE KEY UPDATE 
                     customer=VALUES(customer), 
                     duration=VALUES(duration), 
                     allotment=VALUES(allotment), 
                     assigned=VALUES(assigned), 
                     start_month=VALUES(start_month),
-                    services=VALUES(services)";
+                    services=VALUES(services),
+                    subscription_hours=VALUES(subscription_hours)";
     $projStmt = $conn->prepare($projSql);
     if (!$projStmt) {
-        throw new Exception("Prepare projects statement failed: " . $conn->error);
+        error_log("Prepare projects statement failed: " . $conn->error);
+        throw new Exception("An internal database error occurred.");
     }
-    $projStmt->bind_param("ssidssss", $projectName, $customer, $duration, $allotment, $assigned, $startMonth, $username, $services);
+    $projStmt->bind_param("ssidsssss", $projectName, $customer, $duration, $allotment, $assigned, $startMonth, $username, $services, $subscriptionHours);
     if (!$projStmt->execute()) {
+        error_log("Execute projects statement failed: " . $projStmt->error);
         $projStmt->close();
-        throw new Exception("Execute projects statement failed: " . $conn->error);
+        throw new Exception("An internal database error occurred.");
     }
     $projStmt->close();
 
@@ -127,7 +139,8 @@ try {
                 created_by=VALUES(created_by)";
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
-        throw new Exception("Prepare failed: " . $conn->error);
+        error_log("Prepare allotments statement failed: " . $conn->error);
+        throw new Exception("An internal database error occurred.");
     }
 
     $success = true;
@@ -144,7 +157,7 @@ try {
         $stmt->bind_param("ssdsssis", $m, $projectName, $mAllot, $username, $assigned, $customer, $duration, $username);
         if (!$stmt->execute()) {
             $success = false;
-            $errorMsg = $stmt->error;
+            error_log("Execute allotment statement failed: " . $stmt->error);
             break;
         }
     }
@@ -155,10 +168,11 @@ try {
         echo json_encode(sanitize_utf8(["success" => true, "message" => "Project created successfully."]));
     } else {
         $conn->rollback();
-        throw new Exception("Database transaction failed: " . $errorMsg);
+        throw new Exception("An internal database error occurred.");
     }
 
 } catch (Throwable $t) {
+    error_log("Create project error: " . $t->getMessage());
     $err = [
         "status" => "error", 
         "message" => $t->getMessage()

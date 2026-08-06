@@ -80,7 +80,8 @@ try {
 
     $stmt = $conn->prepare("INSERT INTO account_requests (email, username, password_hash, ip_address) VALUES (?, ?, ?, ?)");
     if (!$stmt) {
-        echo json_encode(["success" => false, "message" => "Database prepare statement failed: " . $conn->error]);
+        error_log("Database prepare statement failed in signup.php: " . $conn->error);
+        echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
         exit;
     }
 
@@ -88,7 +89,8 @@ try {
     if ($stmt->execute()) {
         echo json_encode(["success" => true, "message" => "Sign up request submitted successfully."]);
     } else {
-        echo json_encode(["success" => false, "message" => "Failed to submit sign up request: " . $stmt->error]);
+        error_log("Failed to submit sign up request in signup.php: " . $stmt->error);
+        echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     }
     $stmt->close();
 

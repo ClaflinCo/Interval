@@ -3,9 +3,6 @@ header("Content-Type: application/json");
 require_once 'bootstrap.php';
 require_once 'config.php';
 
-define('SILENT_SYNC', true);
-require_once '../sync_db.php';
-
 $username = $_SESSION['username'] ?? '';
 if (empty($username)) {
     http_response_code(401);
@@ -28,7 +25,7 @@ $result = $conn->query($sql);
 $allowed_projects = [];
 $projectsMeta = [];
 
-$projSql = "SELECT name, customer, duration, allotment, assigned, created_by, services FROM projects";
+$projSql = "SELECT name, customer, duration, allotment, assigned, created_by, services, subscription_hours, completed FROM projects";
 $projRes = $conn->query($projSql);
 if ($projRes) {
     while($row = $projRes->fetch_assoc()) {
@@ -41,7 +38,7 @@ if ($projRes) {
         $is_assigned = in_array($username, $assigned_users);
         $is_creator = ($row['created_by'] === $username);
         
-        if ($user_role === 'Admin' || $is_assigned || $is_creator) {
+        if ($user_role === 'Admin' || $user_role === 'C-Suite' || $is_assigned || $is_creator) {
             if (!in_array($p, $allowed_projects)) {
                 $allowed_projects[] = $p;
             }
@@ -53,6 +50,8 @@ if ($projRes) {
                     "allotment" => (float)($row['allotment'] ?? 0.00),
                     "created_by" => $row['created_by'] ?? '',
                     "services" => $row['services'] ?? '',
+                    "subscription_hours" => $row['subscription_hours'] ?? '',
+                    "completed" => (int)($row['completed'] ?? 0),
                     "active" => true
                 ];
             }
@@ -82,9 +81,9 @@ if ($result) {
         }
         
         $show = false;
-        if ($user_role === 'Admin') {
+        if ($user_role === 'Admin' || $user_role === 'C-Suite') {
             $show = true;
-        } elseif ($user_role === 'Supervisor' || $user_role === 'C-Suite') {
+        } elseif ($user_role === 'Supervisor') {
             $show = in_array($row['project'], $allowed_projects) || ($row['submitted_by'] === $username);
         } elseif ($user_role === 'Employee') {
             $show = ($row['submitted_by'] === $username);
@@ -112,9 +111,9 @@ if ($pendingResult) {
         }
         
         $show = false;
-        if ($user_role === 'Admin') {
+        if ($user_role === 'Admin' || $user_role === 'C-Suite') {
             $show = true;
-        } elseif ($user_role === 'Supervisor' || $user_role === 'C-Suite') {
+        } elseif ($user_role === 'Supervisor') {
             $show = in_array($row['project'], $allowed_projects) || ($row['submitted_by'] === $username);
         } elseif ($user_role === 'Employee') {
             $show = ($row['submitted_by'] === $username);
@@ -129,7 +128,7 @@ if ($pendingResult) {
 }
 
 // Also fetch any unique project names from time_entries that might not have an allotment yet
-if ($user_role === 'Admin') {
+if ($user_role === 'Admin' || $user_role === 'C-Suite') {
     $entryProjSql = "SELECT DISTINCT project FROM time_entries";
     $entryProjRes = $conn->query($entryProjSql);
     if ($entryProjRes) {
@@ -144,6 +143,8 @@ if ($user_role === 'Admin') {
                         "duration" => 1,
                         "created_by" => '',
                         "services" => '',
+                        "subscription_hours" => '',
+                        "completed" => 0,
                         "active" => false
                     ];
                 }
@@ -180,14 +181,15 @@ if ($notifStmt) {
 
 // Fetch all registered services
 $services = [];
-$servicesSql = "SELECT id, service, created_by FROM services ORDER BY service ASC";
+$servicesSql = "SELECT id, service, created_by, is_subscription FROM services ORDER BY service ASC";
 $servicesRes = $conn->query($servicesSql);
 if ($servicesRes) {
     while ($sRow = $servicesRes->fetch_assoc()) {
         $services[] = [
             "id" => (int)$sRow['id'],
             "service" => $sRow['service'],
-            "created_by" => $sRow['created_by']
+            "created_by" => $sRow['created_by'],
+            "is_subscription" => (int)$sRow['is_subscription']
         ];
     }
 }

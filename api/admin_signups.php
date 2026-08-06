@@ -57,7 +57,8 @@ try {
         $stmt = $conn->prepare("SELECT email, username, password_hash, status FROM account_requests WHERE id = ?");
         if (!$stmt) {
             http_response_code(500);
-            echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+            error_log("Prepare statement failed in admin_signups.php: " . $conn->error);
+            echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
             exit;
         }
         $stmt->bind_param("i", $id);
@@ -99,12 +100,14 @@ try {
                 $insStmt = $conn->prepare("INSERT INTO users (username, password_hash, role, display_name, email) VALUES (?, ?, ?, ?, ?)");
                 if (!$insStmt) {
                     $success = false;
-                    $errorMsg = "Prepare insert user stmt failed: " . $conn->error;
+                    error_log("Prepare insert user stmt failed in admin_signups.php: " . $conn->error);
+                    $errorMsg = "An internal database error occurred.";
                 } else {
                     $insStmt->bind_param("sssss", $request['username'], $request['password_hash'], $role, $request['username'], $request['email']);
                     if (!$insStmt->execute()) {
                         $success = false;
-                        $errorMsg = "Failed to create user account: " . $insStmt->error;
+                        error_log("Failed to create user account in admin_signups.php: " . $insStmt->error);
+                        $errorMsg = "An internal database error occurred.";
                     }
                     $insStmt->close();
                 }
@@ -115,12 +118,14 @@ try {
                 $upStmt = $conn->prepare("UPDATE account_requests SET status = 'Approved' WHERE id = ?");
                 if (!$upStmt) {
                     $success = false;
-                    $errorMsg = "Prepare update status stmt failed: " . $conn->error;
+                    error_log("Prepare update status stmt failed in admin_signups.php: " . $conn->error);
+                    $errorMsg = "An internal database error occurred.";
                 } else {
                     $upStmt->bind_param("i", $id);
                     if (!$upStmt->execute()) {
                         $success = false;
-                        $errorMsg = "Failed to update request status: " . $upStmt->error;
+                        error_log("Failed to update request status in admin_signups.php: " . $upStmt->error);
+                        $errorMsg = "An internal database error occurred.";
                     }
                     $upStmt->close();
                 }
@@ -130,12 +135,14 @@ try {
             $upStmt = $conn->prepare("UPDATE account_requests SET status = 'Rejected' WHERE id = ?");
             if (!$upStmt) {
                 $success = false;
-                $errorMsg = "Prepare update status stmt failed: " . $conn->error;
+                error_log("Prepare update status stmt failed in admin_signups.php: " . $conn->error);
+                $errorMsg = "An internal database error occurred.";
             } else {
                 $upStmt->bind_param("i", $id);
                 if (!$upStmt->execute()) {
                     $success = false;
-                    $errorMsg = "Failed to update request status: " . $upStmt->error;
+                    error_log("Failed to update request status in admin_signups.php: " . $upStmt->error);
+                    $errorMsg = "An internal database error occurred.";
                 }
                 $upStmt->close();
             }
@@ -156,7 +163,8 @@ try {
     }
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(["success" => false, "message" => "Server Error: " . $e->getMessage()]);
+    error_log("Admin signups exception: " . $e->getMessage());
+    echo json_encode(["success" => false, "message" => "An internal server error occurred."]);
     exit;
 }
 ?>

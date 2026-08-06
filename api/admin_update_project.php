@@ -48,7 +48,8 @@ try {
         $stmt = $conn->prepare("DELETE FROM projects WHERE name = ?");
         $stmt->bind_param("s", $originalName);
         if (!$stmt->execute()) {
-            throw new Exception("Failed to delete project: " . $stmt->error);
+            error_log("Failed to delete project in admin_update_project.php: " . $stmt->error);
+            throw new Exception("An internal database error occurred.");
         }
         $stmt->close();
 
@@ -70,6 +71,20 @@ try {
         echo json_encode(["success" => true, "message" => "Project deleted successfully."]);
         exit;
         
+    } elseif ($action === 'toggle_completed') {
+        $completed = isset($data['completed']) ? (int)$data['completed'] : 0;
+        
+        $stmt = $conn->prepare("UPDATE projects SET completed = ? WHERE name = ?");
+        $stmt->bind_param("is", $completed, $originalName);
+        if (!$stmt->execute()) {
+            error_log("Failed to toggle project completed status in admin_update_project.php: " . $stmt->error);
+            throw new Exception("An internal database error occurred.");
+        }
+        $stmt->close();
+        
+        echo json_encode(["success" => true, "message" => "Project completed status updated."]);
+        exit;
+
     } elseif ($action === 'update') {
         $name = trim($data['name'] ?? '');
         $customer = trim($data['customer'] ?? '');
@@ -83,6 +98,15 @@ try {
         } else {
             $services = trim($servicesRaw);
         }
+        
+        $serviceAllotmentsRaw = $data['service_allotments'] ?? [];
+        $pairs = [];
+        if (is_array($serviceAllotmentsRaw)) {
+            foreach ($serviceAllotmentsRaw as $service => $hours) {
+                $pairs[] = trim($service) . "_" . floatval($hours);
+            }
+        }
+        $subscriptionHours = implode(", ", $pairs);
 
         if (empty($name)) {
             throw new Exception("Project name cannot be empty.");
@@ -104,10 +128,11 @@ try {
         }
 
         // Update projects table
-        $stmt = $conn->prepare("UPDATE projects SET name = ?, customer = ?, allotment = ?, assigned = ?, services = ? WHERE name = ?");
-        $stmt->bind_param("ssdsss", $name, $customer, $allotment, $assigned, $services, $originalName);
+        $stmt = $conn->prepare("UPDATE projects SET name = ?, customer = ?, allotment = ?, assigned = ?, services = ?, subscription_hours = ? WHERE name = ?");
+        $stmt->bind_param("ssdssss", $name, $customer, $allotment, $assigned, $services, $subscriptionHours, $originalName);
         if (!$stmt->execute()) {
-            throw new Exception("Failed to update project data: " . $stmt->error);
+            error_log("Failed to update project data in admin_update_project.php: " . $stmt->error);
+            throw new Exception("An internal database error occurred.");
         }
         $stmt->close();
 
@@ -148,6 +173,7 @@ try {
     if (isset($conn) && $conn->ping()) {
         $conn->rollback();
     }
+    error_log("Admin update project exception: " . $t->getMessage());
     http_response_code(400);
     echo json_encode(["success" => false, "message" => $t->getMessage()]);
 }

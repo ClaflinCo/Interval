@@ -39,7 +39,8 @@ if (empty($project) || empty($requestType) || empty($details)) {
 // Get all Admin users
 $adminRes = $conn->query("SELECT username FROM users WHERE role = 'Admin'");
 if (!$adminRes) {
-    echo json_encode(["success" => false, "message" => "Failed to fetch administrators: " . $conn->error]);
+    error_log("Failed to fetch administrators in request_project_change.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 
@@ -63,14 +64,16 @@ $reqSql = "INSERT INTO project_change_requests (id, supervisor, project, request
 $reqStmt = $conn->prepare($reqSql);
 if (!$reqStmt) {
     $conn->rollback();
-    echo json_encode(["success" => false, "message" => "Prepare change request statement failed: " . $conn->error]);
+    error_log("Prepare change request statement failed in request_project_change.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 $reqStmt->bind_param("sssss", $requestId, $username, $project, $requestType, $details);
 if (!$reqStmt->execute()) {
     $reqStmt->close();
     $conn->rollback();
-    echo json_encode(["success" => false, "message" => "Failed to save change request: " . $conn->error]);
+    error_log("Failed to save change request in request_project_change.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 $reqStmt->close();
@@ -78,7 +81,8 @@ $reqStmt->close();
 $notifSql = "INSERT INTO notifications (id, username, type, title, msg, month) VALUES (?, ?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($notifSql);
 if (!$stmt) {
-    echo json_encode(["success" => false, "message" => "Prepare statement failed: " . $conn->error]);
+    error_log("Prepare statement failed in request_project_change.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 
@@ -92,7 +96,8 @@ foreach ($admins as $admin) {
     $stmt->bind_param("ssssss", $id, $admin, $type, $title, $msg, $month);
     if (!$stmt->execute()) {
         $success = false;
-        $errorMsg = $stmt->error;
+        error_log("Failed to send change notification to " . $admin . " in request_project_change.php: " . $stmt->error);
+        $errorMsg = "An internal database error occurred.";
         break;
     }
 }
@@ -112,6 +117,6 @@ if ($success) {
     ]);
 } else {
     $conn->rollback();
-    echo json_encode(["success" => false, "message" => "Failed to save notifications: " . $errorMsg]);
+    echo json_encode(["success" => false, "message" => $errorMsg]);
 }
 ?>

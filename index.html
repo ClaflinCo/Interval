@@ -244,7 +244,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
 .export-type-icon{font-size:1.6rem;display:block;margin-bottom:5px}
 .export-type-label{font-size:.82rem;font-weight:600;color:var(--navy)}
 .export-type-sub{font-size:.72rem;color:var(--ink2);margin-top:2px}
-.export-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.export-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px}
 .export-modal-actions{display:flex;gap:10px;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--border)}
 /* APPROVAL */
 .approval-section{background:white;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:20px;overflow:hidden}
@@ -641,6 +641,11 @@ tbody td{padding:10px 13px;vertical-align:middle}
                 <label style="font-size: 0.72rem; margin-bottom: 6px; font-weight: 700; color: var(--text-secondary); display: block; text-transform: uppercase; letter-spacing: .09em;">New Service Name</label>
                 <input type="text" id="advNewService" placeholder="e.g. Cybersecurity" style="width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--ink); font-size: 0.9rem; font-family: inherit; box-sizing: border-box;">
               </div>
+              <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 38px; margin-bottom: 4px;">
+                <label style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--text-secondary); cursor: pointer; white-space: nowrap; margin-bottom: 0;">
+                  <input type="checkbox" id="advNewServiceIsSub" style="cursor: pointer;"> Sub?
+                </label>
+              </div>
               <button class="btn btn-navy" onclick="addServiceAdmin()" style="padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer; height: 38px; display: flex; align-items: center; justify-content: center;">Add</button>
             </div>
             
@@ -865,7 +870,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
       </div>
       <div class="fg" style="gap: 2px; margin-top: 5px;">
         <label style="font-size: 0.65rem;">Offered Services</label>
-        <div id="cpServicesContainer" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px; max-height: 180px; overflow-y: auto;">
+        <div id="cpServicesContainer" style="display: flex; flex-direction: column; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px; max-height: 180px; overflow-y: auto;">
           <!-- Checkboxes generated dynamically -->
         </div>
       </div>
@@ -928,7 +933,7 @@ tbody td{padding:10px 13px;vertical-align:middle}
           
           <div class="fg" style="gap: 2px;">
             <label style="font-size: 0.65rem;">Offered Services</label>
-            <div id="apmServicesContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px; max-height: 180px; overflow-y: auto;">
+            <div id="apmServicesContainer" style="display: flex; flex-direction: column; gap: 8px; background: white; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 2px; max-height: 180px; overflow-y: auto;">
               <!-- Checkboxes generated dynamically -->
             </div>
           </div>
@@ -1050,6 +1055,12 @@ tbody td{padding:10px 13px;vertical-align:middle}
           <label>Filter by Project</label>
           <select id="exportProject" style="width:100%">
             <option value="">All Projects</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Filter by Service</label>
+          <select id="exportService" style="width:100%">
+            <option value="">All Services</option>
           </select>
         </div>
       </div>
@@ -1229,7 +1240,10 @@ function calcHours(e){
 
 function getActiveProjectsForMonth(m) {
   const md = state[m] || {allotments:{},entries:[]};
-  const list = Object.keys(md.allotments || {}).filter(p => md.allotments[p] > 0);
+  const list = Object.keys(md.allotments || {}).filter(p => {
+    const meta = PROJECTS_META[p];
+    return meta && meta.active === true && !meta.completed;
+  });
   const unique = [...new Set(list.map(p => String(p).trim()).filter(p => p.length > 0))];
   unique.sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   return unique;
@@ -1524,9 +1538,9 @@ function updateProjectUI() {
     const cust = PROJECTS_META[p] && PROJECTS_META[p].customer ? ` (${PROJECTS_META[p].customer})` : '';
     return `<option value="${esc(p)}">${esc(p)}${esc(cust)}</option>`;
   };
-  const isAdmin = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'admin');
+  const isAdmin = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'admin' || currentUser.role === 'C-Suite');
   const monthProjects = getActiveProjectsForMonth(currentMonth);
-  const dropdownProjects = (isAdmin ? PROJECTS : monthProjects).filter(p => PROJECTS_META[p] && PROJECTS_META[p].active === true);
+  const dropdownProjects = (isAdmin ? PROJECTS : monthProjects).filter(p => PROJECTS_META[p] && PROJECTS_META[p].active === true && !PROJECTS_META[p].completed);
   
   const editingEntry = editingId ? (state[currentMonth]?.entries || []).find(x=>String(x.id)===String(editingId)) : null;
   const editingProject = editingEntry ? editingEntry.project : '';
@@ -1739,16 +1753,42 @@ function renderServicesCheckboxes() {
     } else {
       SERVICES.forEach(s => {
         const label = document.createElement('label');
-        label.style.cssText = 'display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);';
+        label.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink); padding: 2px 0;';
         
+        const leftSpan = document.createElement('span');
+        leftSpan.style.cssText = 'display: flex; align-items: center; gap: 6px;';
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.name = 'cpServices';
         input.value = s.service;
         input.style.cursor = 'pointer';
+        leftSpan.appendChild(input);
+        leftSpan.appendChild(document.createTextNode(' ' + s.service));
+        label.appendChild(leftSpan);
+
+        if (s.is_subscription) {
+          const rightSpan = document.createElement('span');
+          rightSpan.style.cssText = 'display: inline-flex; align-items: center; gap: 4px;';
+          rightSpan.innerHTML = '<span style="color:var(--navy); font-weight:600; font-size:0.65rem;">(Sub)</span>';
+          
+          const allotInput = document.createElement('input');
+          allotInput.type = 'number';
+          allotInput.name = 'cpServicesAllotment_' + s.service.replace(/\s+/g, '_');
+          allotInput.placeholder = 'Hrs/mo';
+          allotInput.min = '0';
+          allotInput.step = '0.5';
+          allotInput.style.cssText = 'width: 60px; padding: 2px 4px; font-size: 0.7rem; border: 1px solid var(--border); border-radius: 4px; margin-left: 5px;';
+          allotInput.disabled = true;
+          
+          input.onchange = () => {
+            allotInput.disabled = !input.checked;
+            if (!input.checked) allotInput.value = '';
+          };
+          
+          rightSpan.appendChild(allotInput);
+          label.appendChild(rightSpan);
+        }
         
-        label.appendChild(input);
-        label.appendChild(document.createTextNode(' ' + s.service));
         cpContainer.appendChild(label);
       });
     }
@@ -1761,16 +1801,42 @@ function renderServicesCheckboxes() {
     } else {
       SERVICES.forEach(s => {
         const label = document.createElement('label');
-        label.style.cssText = 'display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink);';
+        label.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 0.75rem; font-weight: normal; cursor: pointer; text-transform: none; color: var(--ink); padding: 2px 0;';
         
+        const leftSpan = document.createElement('span');
+        leftSpan.style.cssText = 'display: flex; align-items: center; gap: 6px;';
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.name = 'apmServices';
         input.value = s.service;
         input.style.cursor = 'pointer';
+        leftSpan.appendChild(input);
+        leftSpan.appendChild(document.createTextNode(' ' + s.service));
+        label.appendChild(leftSpan);
+
+        if (s.is_subscription) {
+          const rightSpan = document.createElement('span');
+          rightSpan.style.cssText = 'display: inline-flex; align-items: center; gap: 4px;';
+          rightSpan.innerHTML = '<span style="color:var(--navy); font-weight:600; font-size:0.65rem;">(Sub)</span>';
+          
+          const allotInput = document.createElement('input');
+          allotInput.type = 'number';
+          allotInput.name = 'apmServicesAllotment_' + s.service.replace(/\s+/g, '_');
+          allotInput.placeholder = 'Hrs/mo';
+          allotInput.min = '0';
+          allotInput.step = '0.5';
+          allotInput.style.cssText = 'width: 60px; padding: 2px 4px; font-size: 0.7rem; border: 1px solid var(--border); border-radius: 4px; margin-left: 5px;';
+          allotInput.disabled = true;
+          
+          input.onchange = () => {
+            allotInput.disabled = !input.checked;
+            if (!input.checked) allotInput.value = '';
+          };
+          
+          rightSpan.appendChild(allotInput);
+          label.appendChild(rightSpan);
+        }
         
-        label.appendChild(input);
-        label.appendChild(document.createTextNode(' ' + s.service));
         apmContainer.appendChild(label);
       });
     }
@@ -1791,10 +1857,26 @@ function renderAdminServicesList() {
     const item = document.createElement('div');
     item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 6px 8px; border-bottom: 1px solid var(--border);';
     
+    const leftDiv = document.createElement('div');
+    leftDiv.style.cssText = 'display: flex; align-items: center; gap: 10px;';
+
     const nameSpan = document.createElement('span');
     nameSpan.textContent = s.service;
     nameSpan.style.fontWeight = '500';
     nameSpan.style.color = 'var(--navy)';
+    leftDiv.appendChild(nameSpan);
+
+    // Checkbox to toggle is_subscription
+    const subLabel = document.createElement('label');
+    subLabel.style.cssText = 'display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--text-secondary); cursor: pointer; margin-bottom: 0; font-weight: normal; text-transform: none;';
+    const subInput = document.createElement('input');
+    subInput.type = 'checkbox';
+    subInput.checked = !!s.is_subscription;
+    subInput.style.cursor = 'pointer';
+    subInput.onchange = () => toggleServiceSubscription(s.id, subInput.checked);
+    subLabel.appendChild(subInput);
+    subLabel.appendChild(document.createTextNode('Sub'));
+    leftDiv.appendChild(subLabel);
     
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-danger btn-sm';
@@ -1802,30 +1884,52 @@ function renderAdminServicesList() {
     delBtn.textContent = 'Remove';
     delBtn.onclick = () => deleteServiceAdmin(s.id, s.service);
     
-    item.appendChild(nameSpan);
+    item.appendChild(leftDiv);
     item.appendChild(delBtn);
     container.appendChild(item);
   });
 }
 
+async function toggleServiceSubscription(id, isSubscription) {
+  try {
+    const res = await fetch('api/admin_services.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update_subscription', id: id, is_subscription: isSubscription ? 1 : 0 })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('success', 'Subscription Updated', 'Service subscription status updated successfully.', null);
+      await init();
+    } else {
+      await showAlert("Error: " + (d.message || "Unknown error"), "Update Error", "error");
+    }
+  } catch(e) {
+    await showAlert("Network error while updating service.", "Connection Error", "error");
+  }
+}
+
 async function addServiceAdmin() {
   const input = document.getElementById('advNewService');
+  const isSubInput = document.getElementById('advNewServiceIsSub');
   if (!input) return;
   const val = input.value.trim();
   if (!val) {
     await showAlert("Please enter a service name.", "Validation Error", "error");
     return;
   }
+  const isSub = isSubInput ? (isSubInput.checked ? 1 : 0) : 0;
   
   try {
     const res = await fetch('api/admin_services.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'create', service: val })
+      body: JSON.stringify({ action: 'create', service: val, is_subscription: isSub })
     });
     const data = await res.json();
     if (data.success) {
       input.value = '';
+      if (isSubInput) isSubInput.checked = false;
       pushNotif('success', 'Service Created', `"${val}" has been added as a service.`, null);
       await init();
       renderAdminServicesList();
@@ -2947,6 +3051,11 @@ function openExportModal(){
   if(mSel) {
     mSel.innerHTML = '<option value="">All Months</option>' + MONTHS.map(m => `<option value="${m}"${m===currentMonth?' selected':''}>${m}</option>`).join('');
   }
+  // Populate service dropdown
+  const sSel = document.getElementById('exportService');
+  if(sSel) {
+    sSel.innerHTML = '<option value="">All Services</option>' + SERVICES.map(s => `<option value="${esc(s.service)}">${esc(s.service)}</option>`).join('');
+  }
 }
 function closeExportModal(){document.getElementById('exportModal').classList.remove('open');}
 function selectExportType(t){
@@ -2959,14 +3068,60 @@ function selectExportType(t){
 function getFilteredData(){
   const sp = document.getElementById('exportProject').value;
   const sm = document.getElementById('exportMonth')?.value || '';
+  const ss = document.getElementById('exportService')?.value || '';
   const months = sm ? [sm] : MONTHS;
   return months.map(m=>{
     let elist=[...(state[m]?.entries||[])];
-    if(sp)elist=elist.filter(e=>e.project===sp);
+    if(sp) elist=elist.filter(e=>e.project===sp);
+    if(ss) {
+      elist=elist.filter(e=>{
+        const entryServices = (e.services || '').split(',').map(x=>x.trim());
+        if (entryServices.includes(ss)) return true;
+        const projServices = (PROJECTS_META[e.project]?.services || '').split(',').map(x=>x.trim());
+        return projServices.includes(ss);
+      });
+    }
     elist.sort((a,b)=>{
+      if (!sp) {
+        const serviceA = (a.services || '').trim();
+        const serviceB = (b.services || '').trim();
+        if(serviceA !== serviceB) return serviceA.localeCompare(serviceB);
+      }
       if(a.project !== b.project) return a.project.localeCompare(b.project);
       return new Date(a.date) - new Date(b.date);
     });
+
+    // Calculate running subscription remaining balances for this month (resets each month)
+    const subHoursRemaining = {}; // project -> { serviceName -> remainingHours }
+    PROJECTS.forEach(p => {
+      const meta = PROJECTS_META[p] || {};
+      subHoursRemaining[p] = {};
+      const subscriptionHours = meta.subscription_hours || '';
+      if (subscriptionHours) {
+        subscriptionHours.split(',').forEach(part => {
+          const subparts = part.trim().split('_');
+          if (subparts.length >= 2) {
+            const hours = parseFloat(subparts.pop());
+            const service = subparts.join('_');
+            subHoursRemaining[p][service] = hours;
+          }
+        });
+      }
+    });
+
+    elist.forEach(e => {
+      const pName = e.project || '';
+      const entryService = (e.services || '').trim();
+      const billed = calcHours(e);
+      
+      let subValStr = '—';
+      if (subHoursRemaining[pName] && subHoursRemaining[pName][entryService] !== undefined) {
+        subHoursRemaining[pName][entryService] -= billed;
+        subValStr = subHoursRemaining[pName][entryService].toFixed(2);
+      }
+      e.subRemaining = subValStr;
+    });
+
     const allotments = state[m]?.allotments || {};
     const activeProjects = sp ? [sp] : getActiveProjectsForMonth(m);
     const allotment = activeProjects.reduce((s,p)=>s+(allotments[p] !== undefined ? allotments[p] : 0),0);
@@ -2984,12 +3139,14 @@ function exportToCSV() {
   const data = getFilteredData();
   const sp = document.getElementById('exportProject').value;
   const sm = document.getElementById('exportMonth')?.value || '';
+  const ss = document.getElementById('exportService')?.value || '';
   const dateStr = new Date().toISOString().split('T')[0];
   let fn = sm ? `Interval_${sm}_2026` : `Interval_2026`;
   if(sp) fn += `_${sp}`;
+  if(ss) fn += `_${ss.replace(/\s+/g, '_')}`;
   fn += `_${dateStr}.csv`;
 
-  const headers = ["Project", "Services", "Date", "Check In", "Check Out", "Staff", "# Staff", "Client", "Duration", "Billed Hours", "Status", "Notes"];
+  const headers = ["Project", "Services", "Date", "Check In", "Check Out", "Staff", "# Staff", "Client", "Duration", "Billed Hours", "Status", "Subscription Allotment", "Notes"];
   let csv = headers.join(",") + "\n";
 
   data.forEach(m => {
@@ -3006,6 +3163,7 @@ function exportToCSV() {
         calcDuration(e).toFixed(2),
         calcHours(e).toFixed(2),
         e.status || "",
+        e.subRemaining || "—",
         (e.notes || "").replace(/"/g, '""')
       ];
       csv += row.map(v => `"${v}"`).join(",") + "\n";
@@ -3027,9 +3185,11 @@ function exportToCSV() {
 function exportToXLSX(){
   const sp = document.getElementById('exportProject').value;
   const sm = document.getElementById('exportMonth')?.value || '';
+  const ss = document.getElementById('exportService')?.value || '';
   const dateStr = new Date().toISOString().split('T')[0];
   let fn = sm ? `Interval_${sm}_2026` : `Interval_2026`;
   if(sp) fn += `_${sp}`;
+  if(ss) fn += `_${ss.replace(/\s+/g, '_')}`;
   fn += `_${dateStr}`;
   if(!fn.endsWith('.xlsx'))fn+='.xlsx';
   const CLAFLIN_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAACOklEQVR4nOzaMRECURAFweUADYTEWEEJErBNQkZ9DJyCm+70xVO1wW4DYdtAmABIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIuwwc3eN5v/62294kAA7vPPOe83rtbU4g0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpnuE4vNOa75r12d0GwpxApAmANAGQJgDSBEDaHwAA//+FneC7AAAABklEQVQDABhcCf1Up/YiAAAAAElFTkSuQmCC';
@@ -3049,6 +3209,7 @@ function exportToXLSX(){
         staff:e.staff||'',numStaff:sc,client:e.client||'',
         duration:dur,billedHours:billed,
         hoursRemaining:+(pAllot-projectRunning[pName]).toFixed(2),
+        subscriptionAllotment:e.subRemaining || '—',
         status:e.status||'',notes:e.notes||''
       };
     });
@@ -3111,7 +3272,7 @@ function _exportXLSX_SheetJS(fn,months_payload){
     const remT=allotment-totB;
     const ws={};
     function SC(r,c,cell){ws[XLSX.utils.encode_cell({r,c})]=cell;}
-    ws['!cols']=[{wch:16},{wch:11},{wch:10},{wch:11},{wch:20},{wch:14},{wch:22},{wch:17},{wch:13},{wch:16},{wch:16},{wch:50}];
+    ws['!cols']=[{wch:16},{wch:11},{wch:10},{wch:11},{wch:20},{wch:14},{wch:22},{wch:17},{wch:13},{wch:18},{wch:16},{wch:16},{wch:50}];
     ws['!rows']=[{hpt:20},{hpt:26},{hpt:20},{hpt:10},{hpt:32}];
     // Stats
     SC(0,8,lc("Monthly Allotment:",10,true,"1B4F72","right"));
@@ -3121,8 +3282,8 @@ function _exportXLSX_SheetJS(fn,months_payload){
     SC(1,9,{v:totB,t:'n',s:{font:{name:"Calibri",sz:11,bold:true,color:{rgb:BLK}},alignment:{horizontal:"center",vertical:"center"},numFmt:"0.00"}});
     SC(2,8,lc("REMAINING:",10,true,"1B4F72","right"));
     SC(2,9,{v:remT,t:'n',s:{font:{name:"Calibri",sz:11,bold:true,color:{rgb:BLK}},fill:{patternType:"solid",fgColor:{rgb:remT<0?RED:GRN}},alignment:{horizontal:"center",vertical:"center"},numFmt:"0.00"}});
-    // Col headers (12 cols)
-    ["Project","Date","Check In","Check Out","Staff Attended","Number of Staff","Client Contact","Session Duration","Billed Hours","Hours Remaining","Status","Work Details/Notes"]
+    // Col headers (13 cols)
+    ["Project","Date","Check In","Check Out","Staff Attended","Number of Staff","Client Contact","Session Duration","Billed Hours","Subscription Allotment","Hours Remaining","Status","Work Details/Notes"]
       .forEach((h,i)=>SC(4,i,hc(h)));
     // Data
     entries.forEach((e,idx)=>{
@@ -3139,13 +3300,14 @@ function _exportXLSX_SheetJS(fn,months_payload){
       SC(rn,6,dc(e.client||'',ri,"center"));
       SC(rn,7,dc(+e.duration||0,ri,"center","0.00"));
       SC(rn,8,dc(+e.billedHours||0,ri,"center","0.00"));
-      SC(rn,9,dc(rem,ri,"center","0.00",true,hrsRemFill(rem)));
-      SC(rn,10,dc(e.status||'',ri,"center",null,false,statusFill(e.status)));
-      SC(rn,11,dc(e.notes||'',ri,"left"));
+      SC(rn,9,dc(e.subscriptionAllotment||'—',ri,"center"));
+      SC(rn,10,dc(rem,ri,"center","0.00",true,hrsRemFill(rem)));
+      SC(rn,11,dc(e.status||'',ri,"center",null,false,statusFill(e.status)));
+      SC(rn,12,dc(e.notes||'',ri,"left"));
       ws['!rows'].push({hpt:32});
     });
     ws['!merges']=[{s:{r:1,c:3},e:{r:1,c:7}}];
-    ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:4+Math.max(entries.length,1),c:11}});
+    ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:4+Math.max(entries.length,1),c:12}});
     wb.SheetNames.push(month);wb.Sheets[month]=ws;
   });
   const safeFn2=fn.endsWith('.xlsx')?fn:fn+'.xlsx';
@@ -3157,7 +3319,8 @@ async function exportToPDF(){
   const CLAFLIN_LOGO = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjM3IDIwIDk1MCA5NTAiIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPg0KICA8IS0tIENsb2NrIE91dGVyIFJpbmcgLS0+DQogIDxjaXJjbGUgY3g9IjUxMiIgY3k9IjIwMCIgcj0iMTUwIiBmaWxsPSIjMDUyOTRCIiAvPg0KICANCiAgPCEtLSBDbG9jayBGYWNlIC0tPg0KICA8Y2lyY2xlIGN4PSI1MTIiIGN5PSIyMDAiIHI9IjEyMCIgZmlsbD0iI0ZGRkZGRiIgLz4NCiAgDQogIDwhLS0gQ2xvY2sgVGlja3MgLS0+DQogIDxnIHN0cm9rZT0iIzA1Mjk0QiIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4NCiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIC8+DQogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgzMCwgNTEyLCAyMDApIiAvPg0KICAgIDxsaW5lIHgxPSI1MTIiIHkxPSI4OCIgeDI9IjUxMiIgeTI9IjEwOCIgdHJhbnNmb3JtPSJyb3RhdGUoNjAsIDUxMiwgMjAwKSIgLz4NCiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDkwLCA1MTIsIDIwMCkiIC8+DQogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgxMjAsIDUxMiwgMjAwKSIgLz4NCiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDE1MCwgNTEyLCAyMDApIiAvPg0KICAgIDxsaW5lIHgxPSI1MTIiIHkxPSI4OCIgeDI9IjUxMiIgeTI9IjEwOCIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwLCA1MTIsIDIwMCkiIC8+DQogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgyMTAsIDUxMiwgMjAwKSIgLz4NCiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDI0MCwgNTEyLCAyMDApIiAvPg0KICAgIDxsaW5lIHgxPSI1MTIiIHkxPSI4OCIgeDI9IjUxMiIgeTI9IjEwOCIgdHJhbnNmb3JtPSJyb3RhdGUoMjcwLCA1MTIsIDIwMCkiIC8+DQogICAgPGxpbmUgeDE9IjUxMiIgeTE9Ijg4IiB4Mj0iNTEyIiB5Mj0iMTA4IiB0cmFuc2Zvcm09InJvdGF0ZSgzMDAsIDUxMiwgMjAwKSIgLz4NCiAgICA8bGluZSB4MT0iNTEyIiB5MT0iODgiIHgyPSI1MTIiIHkyPSIxMDgiIHRyYW5zZm9ybT0icm90YXRlKDMzMCwgNTEyLCAyMDApIiAvPg0KICA8L2c+DQogIA0KICA8IS0tIENsb2NrIEhhbmRzIC0tPg0KICA8IS0tIEhvdXIgaGFuZCBwb2ludGluZyB0byAxMCBvJ2Nsb2NrIC0tPg0KICA8bGluZSB4MT0iNTEyIiB5MT0iMjAwIiB4Mj0iNTEyIiB5Mj0iMTM1IiBzdHJva2U9IiMwNTI5NEIiIHN0cm9rZS13aWR0aD0iMTYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgdHJhbnNmb3JtPSJyb3RhdGUoLTYwLCA1MTIsIDIwMCkiIC8+DQogIDwhLS0gTWludXRlIGhhbmQgcG9pbnRpbmcgdG8gMiBvJ2Nsb2NrIC0tPg0KICA8bGluZSB4MT0iNTEyIiB5MT0iMjAwIiB4Mj0iNTEyIiB5Mj0iMTEwIiBzdHJva2U9IiMwNTI5NEIiIHN0cm9rZS13aWR0aD0iMTIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgdHJhbnNmb3JtPSJyb3RhdGUoNjAsIDUxMiwgMjAwKSIgLz4NCiAgDQogIDwhLS0gQ2VudGVyIENhcCAtLT4NCiAgPGNpcmNsZSBjeD0iNTEyIiBjeT0iMjAwIiByPSIxNSIgZmlsbD0iIzA1Mjk0QiIgLz4NCiAgDQogIDwhLS0gU2xhYiBTZXJpZiAnaScgQm9keSAtLT4NCiAgPCEtLSBTdGVtIC0tPg0KICA8cmVjdCB4PSI0MDIiIHk9IjQxMCIgd2lkdGg9IjIyMCIgaGVpZ2h0PSI0NjAiIGZpbGw9IiMwNTI5NEIiIC8+DQogIDwhLS0gVG9wIExlZnQgU2VyaWYgRmxhZyAtLT4NCiAgPHJlY3QgeD0iMjgyIiB5PSI0MTAiIHdpZHRoPSIxMjAiIGhlaWdodD0iNzAiIGZpbGw9IiMwNTI5NEIiIC8+DQogIDwhLS0gQm90dG9tIFNlcmlmIEJhc2UgLS0+DQogIDxyZWN0IHg9IjIzMiIgeT0iODcwIiB3aWR0aD0iNTYwIiBoZWlnaHQ9IjcwIiBmaWxsPSIjMDUyOTRCIiAvPg0KPC9zdmc+DQo=';
   const data=getFilteredData();
   const sm = document.getElementById('exportMonth')?.value || '';
-  const title='By Claflin A.L.M' + (sm ? ` — ${sm}` : ' — Full Report');
+  const ss = document.getElementById('exportService')?.value || '';
+  const title='By Claflin A.L.M' + (sm ? ` — ${sm}` : ' — Full Report') + (ss ? ` — ${ss}` : '');
   let html=`<!DOCTYPE html><html><head><title>${title}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -3214,10 +3377,10 @@ table.data td.notes{font-size:7.5pt}
     <table class="data"><thead><tr>
       <th class="left">Project</th><th>Services</th><th>Date</th><th>Check In</th><th>Check Out</th>
       <th>Staff Attended</th><th>Number<br>of Staff</th><th>Client Contact</th>
-      <th>Session<br>Duration</th><th>Billed<br>Hours</th><th>Status</th><th>Hours<br>Remaining</th>
+      <th>Session<br>Duration</th><th>Billed<br>Hours</th><th>Subscription<br>Allotment</th><th>Status</th><th>Hours<br>Remaining</th>
       <th class="left">Work Details/Notes</th>
     </tr></thead><tbody>`;
-    if(!entries.length){html+=`<tr><td colspan="13" class="empty">No entries for ${month}</td></tr>`;}
+    if(!entries.length){html+=`<tr><td colspan="14" class="empty">No entries for ${month}</td></tr>`;}
     else{
       let projectRunning = {};
       entries.forEach((e,i)=>{
@@ -3245,6 +3408,7 @@ table.data td.notes{font-size:7.5pt}
           <td>${esc(e.client)}</td>
           <td class="ctr${dc}">${(+dur).toFixed(2)}</td>
           <td class="ctr">${(+h).toFixed(2)}</td>
+          <td class="ctr">${esc(e.subRemaining || '—')}</td>
           <td class="ctr"><span style="${stStyle}">${esc(sc2)||'—'}</span></td>
           <td class="${r < 0 ? 'exceeded-rem' : 'grn'}">${(+r).toFixed(2)}</td>
           <td class="notes">${esc(e.notes)}</td>
@@ -3265,10 +3429,8 @@ table.data td.notes{font-size:7.5pt}
 let selectedAdminProject = '';
 
 function onEditProjectsClick() {
-  if (currentUser && currentUser.role === 'Admin') {
+  if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Supervisor' || currentUser.role === 'C-Suite')) {
     openAdminProjectManagerModal();
-  } else if (currentUser && (currentUser.role === 'Supervisor' || currentUser.role === 'C-Suite')) {
-    toggleAllotmentEdit();
   }
 }
 
@@ -3337,13 +3499,52 @@ function renderAdminProjectCards() {
     card.onclick = () => selectAdminProject(p);
     
     card.innerHTML = `
-      <div style="font-weight:700; color:var(--navy); font-size:0.85rem; margin-bottom: 4px; word-break: break-all;">${p}</div>
-      <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom: 2px;">Customer: ${cust || '—'}</div>
-      <div style="font-size:0.75rem; color:var(--text-muted);">Created by: ${createdBy}</div>
+      <div style="font-weight:700; color:var(--navy); font-size:0.85rem; margin-bottom: 4px; word-break: break-all;">${esc(p)}</div>
+      <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom: 2px;">Customer: ${esc(cust || '—')}</div>
+      <div style="font-size:0.75rem; color:var(--text-muted);">Created by: ${esc(createdBy)}</div>
+      <div style="margin-top: 8px; border-top: 1.5px solid var(--border); padding-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+        <label style="font-size:0.7rem; font-weight:normal; display:flex; align-items:center; gap:4px; margin:0; cursor:pointer;" onclick="event.stopPropagation();">
+          <input type="checkbox" name="apmProjectCompleted" value="${esc(p)}" ${meta.completed ? 'checked' : ''} onchange="toggleProjectCompleted('${esc(p)}', this.checked)">
+          Completed
+        </label>
+      </div>
     `;
     
     list.appendChild(card);
   });
+}
+
+async function toggleProjectCompleted(p, completed) {
+  try {
+    const res = await fetch('api/admin_update_project.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'toggle_completed',
+        originalName: p,
+        completed: completed ? 1 : 0
+      })
+    });
+    const d = await res.json();
+    if (d.success) {
+      pushNotif('success', 'Status Updated', `Project "${p}" marked as ${completed ? 'completed' : 'active'}.`, null);
+      if (PROJECTS_META[p]) {
+        PROJECTS_META[p].completed = completed ? 1 : 0;
+      }
+      if (selectedAdminProject === p) {
+        selectAdminProject(p);
+      } else {
+        renderAdminProjectCards();
+      }
+      updateProjectUI();
+    } else {
+      await showAlert(d.error || 'Failed to update status.', 'Error', 'error');
+      renderAdminProjectCards();
+    }
+  } catch (err) {
+    await showAlert('A network error occurred.', 'Error', 'error');
+    renderAdminProjectCards();
+  }
 }
 
 function filterAdminProjects() {
@@ -3362,10 +3563,57 @@ function selectAdminProject(p) {
   
   const services = meta.services || '';
   const servicesList = services.split(',').map(s => s.trim());
+  let serviceAllotmentsMap = {};
+  const subscriptionHours = meta.subscription_hours || '';
+  if (subscriptionHours) {
+    subscriptionHours.split(',').forEach(part => {
+      const subparts = part.trim().split('_');
+      if (subparts.length >= 2) {
+        const hours = parseFloat(subparts.pop());
+        const service = subparts.join('_');
+        serviceAllotmentsMap[service] = hours;
+      }
+    });
+  }
+
   document.querySelectorAll('input[name="apmServices"]').forEach(cb => {
-    cb.checked = servicesList.includes(cb.value);
+    const isChecked = servicesList.includes(cb.value);
+    cb.checked = isChecked;
+    cb.disabled = isCompleted;
+    
+    const allotInput = document.getElementsByName('apmServicesAllotment_' + cb.value.replace(/\s+/g, '_'))[0];
+    if (allotInput) {
+      allotInput.disabled = isCompleted || !isChecked;
+      allotInput.value = isChecked ? (serviceAllotmentsMap[cb.value] !== undefined ? serviceAllotmentsMap[cb.value] : '') : '';
+    }
   });
   
+  document.getElementById('apmProjName').disabled = isCompleted;
+  document.getElementById('apmCustomer').disabled = isCompleted;
+  document.getElementById('apmAllotment').disabled = isCompleted;
+  document.getElementById('apmAssigned').disabled = isCompleted;
+
+  const saveBtn = document.querySelector('#apmEditForm button.btn-navy');
+  if (saveBtn) {
+    saveBtn.disabled = isCompleted;
+    saveBtn.style.opacity = isCompleted ? '0.5' : '1';
+    saveBtn.style.cursor = isCompleted ? 'not-allowed' : 'pointer';
+  }
+
+  let banner = document.getElementById('apmCompletedBanner');
+  if (isCompleted) {
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'apmCompletedBanner';
+      banner.style.cssText = 'background: #fee2e2; color: #991b1b; padding: 10px; border-radius: var(--radius-md); font-size: 0.75rem; font-weight: bold; text-align: center; margin-bottom: 12px;';
+      banner.textContent = 'This project is marked as Completed. Uncheck "Completed" on the card to edit its properties or assign allotments.';
+      const form = document.getElementById('apmEditForm');
+      form.insertBefore(banner, form.firstChild);
+    }
+  } else {
+    if (banner) banner.remove();
+  }
+
   document.getElementById('apmEditPlaceholder').style.display = 'none';
   document.getElementById('apmEditForm').style.display = 'flex';
 }
@@ -3378,8 +3626,13 @@ async function saveAdminProject() {
   const assigned = document.getElementById('apmAssigned').value.trim();
   
   const servicesChecked = [];
+  const serviceAllotments = {};
   document.querySelectorAll('input[name="apmServices"]:checked').forEach(cb => {
     servicesChecked.push(cb.value);
+    const allotInput = document.getElementsByName('apmServicesAllotment_' + cb.value.replace(/\s+/g, '_'))[0];
+    if (allotInput && allotInput.value) {
+      serviceAllotments[cb.value] = parseFloat(allotInput.value);
+    }
   });
   
   if (!name || !customer || isNaN(allotment) || !assigned) {
@@ -3399,6 +3652,7 @@ async function saveAdminProject() {
         allotment: allotment,
         assigned: assigned,
         services: servicesChecked,
+        service_allotments: serviceAllotments,
         month: currentMonth
       })
     });
@@ -3482,9 +3736,15 @@ async function submitCreateProject(){
   const duration = parseInt(document.getElementById('cpDuration').value, 10);
   const allotment = parseFloat(document.getElementById('cpAllotment').value);
   const assigned = document.getElementById('cpAssigned').value.trim();
+  
   const servicesChecked = [];
+  const serviceAllotments = {};
   document.querySelectorAll('input[name="cpServices"]:checked').forEach(cb => {
     servicesChecked.push(cb.value);
+    const allotInput = document.getElementsByName('cpServicesAllotment_' + cb.value.replace(/\s+/g, '_'))[0];
+    if (allotInput && allotInput.value) {
+      serviceAllotments[cb.value] = parseFloat(allotInput.value);
+    }
   });
   if(!projectName || !customer || isNaN(duration) || duration < 1 || isNaN(allotment) || !assigned){
     await showAlert("Please fill out all required fields.", "Validation Error", "error");
@@ -3495,7 +3755,8 @@ async function submitCreateProject(){
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        projectName, customer, duration, allotment, assigned, startMonth: currentMonth, services: servicesChecked
+        projectName, customer, duration, allotment, assigned, startMonth: currentMonth, 
+        services: servicesChecked, service_allotments: serviceAllotments
       })
     });
     const d = await res.json();

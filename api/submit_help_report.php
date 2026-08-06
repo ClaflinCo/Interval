@@ -31,7 +31,8 @@ if (empty($details)) {
 // Get all Admin users to send notifications
 $adminRes = $conn->query("SELECT username FROM users WHERE role = 'Admin'");
 if (!$adminRes) {
-    echo json_encode(["success" => false, "message" => "Failed to fetch administrators: " . $conn->error]);
+    error_log("Failed to fetch administrators in submit_help_report.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 
@@ -49,14 +50,16 @@ $repSql = "INSERT INTO admin_reports (id, username, details, status) VALUES (?, 
 $repStmt = $conn->prepare($repSql);
 if (!$repStmt) {
     $conn->rollback();
-    echo json_encode(["success" => false, "message" => "Prepare admin report statement failed: " . $conn->error]);
+    error_log("Prepare admin report statement failed in submit_help_report.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 $repStmt->bind_param("sss", $reportId, $username, $details);
 if (!$repStmt->execute()) {
     $repStmt->close();
     $conn->rollback();
-    echo json_encode(["success" => false, "message" => "Failed to save help report: " . $conn->error]);
+    error_log("Failed to save help report in submit_help_report.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 $repStmt->close();
@@ -67,7 +70,8 @@ if (!empty($admins)) {
     $stmt = $conn->prepare($notifSql);
     if (!$stmt) {
         $conn->rollback();
-        echo json_encode(["success" => false, "message" => "Prepare notification statement failed: " . $conn->error]);
+        error_log("Prepare notification statement failed in submit_help_report.php: " . $conn->error);
+        echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
         exit;
     }
 
@@ -80,7 +84,8 @@ if (!empty($admins)) {
         $stmt->bind_param("sssss", $id, $admin, $type, $title, $msg);
         if (!$stmt->execute()) {
             $success = false;
-            $errorMsg = $stmt->error;
+            error_log("Failed to send help notification to " . $admin . " in submit_help_report.php: " . $stmt->error);
+            $errorMsg = "An internal database error occurred.";
             break;
         }
     }
@@ -99,6 +104,6 @@ if ($success) {
     ]);
 } else {
     $conn->rollback();
-    echo json_encode(["success" => false, "message" => "Failed to notify administrators: " . $errorMsg]);
+    echo json_encode(["success" => false, "message" => $errorMsg]);
 }
 ?>

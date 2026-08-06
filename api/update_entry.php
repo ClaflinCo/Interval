@@ -22,7 +22,7 @@ function sanitize_utf8($data) {
 
 // Helper function to check project access
 function check_project_access($conn, $username, $role, $proj) {
-    if ($role === 'Admin') return true;
+    if ($role === 'Admin' || $role === 'C-Suite') return true;
     $accessStmt = $conn->prepare("SELECT assigned, created_by FROM projects WHERE name = ?");
     if (!$accessStmt) return false;
     $accessStmt->bind_param("s", $proj);
@@ -84,7 +84,10 @@ try {
     if ($action === 'delete') {
         // Enforce delete permissions
         $entryStmt = $conn->prepare("SELECT submitted_by, project FROM time_entries WHERE id = ?");
-        if (!$entryStmt) throw new Exception("Prepare failed: " . $conn->error);
+        if (!$entryStmt) {
+            error_log("Prepare entry statement failed: " . $conn->error);
+            throw new Exception("An internal database error occurred.");
+        }
         $entryStmt->bind_param("i", $id);
         $entryStmt->execute();
         $entryRes = $entryStmt->get_result();
@@ -114,25 +117,35 @@ try {
 
         // Perform deletion
         $stmt = $conn->prepare("DELETE FROM time_entries WHERE id = ?");
-        if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
+        if (!$stmt) {
+            error_log("Prepare delete statement failed: " . $conn->error);
+            throw new Exception("An internal database error occurred.");
+        }
         $stmt->bind_param("i", $id);
         if ($stmt->execute()) {
             $resultData = ["status" => "success", "success" => true, "affected" => $stmt->affected_rows, "idSent" => $id];
         } else {
-            throw new Exception("Execute failed: " . $stmt->error);
+            error_log("Execute delete statement failed: " . $stmt->error);
+            throw new Exception("An internal database error occurred.");
         }
     } else if ($action === 'approve') {
         if ($user_role !== 'Admin') {
             throw new Exception("Unauthorized access.");
         }
         $stmt = $conn->prepare("UPDATE time_entries SET approval_status = 'Approved' WHERE id = ?");
-        if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
+        if (!$stmt) {
+            error_log("Prepare approve statement failed: " . $conn->error);
+            throw new Exception("An internal database error occurred.");
+        }
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $stmt->close();
 
         $origStmt = $conn->prepare("SELECT edit_of_id FROM time_entries WHERE id = ?");
-        if (!$origStmt) throw new Exception("Prepare failed: " . $conn->error);
+        if (!$origStmt) {
+            error_log("Prepare select orig statement failed: " . $conn->error);
+            throw new Exception("An internal database error occurred.");
+        }
         $origStmt->bind_param("i", $id);
         $origStmt->execute();
         $res = $origStmt->get_result();
@@ -147,13 +160,19 @@ try {
                                    t1.notes = t2.notes, t1.services = t2.services 
                                WHERE t1.id = ? AND t2.id = ?";
                 $upStmt = $conn->prepare($updateSql);
-                if (!$upStmt) throw new Exception("Prepare failed: " . $conn->error);
+                if (!$upStmt) {
+                    error_log("Prepare update orig statement failed: " . $conn->error);
+                    throw new Exception("An internal database error occurred.");
+                }
                 $upStmt->bind_param("ii", $orig, $id);
                 $upStmt->execute();
                 $upStmt->close();
 
                 $delStmt = $conn->prepare("DELETE FROM time_entries WHERE id = ?");
-                if (!$delStmt) throw new Exception("Prepare failed: " . $conn->error);
+                if (!$delStmt) {
+                    error_log("Prepare delete edit statement failed: " . $conn->error);
+                    throw new Exception("An internal database error occurred.");
+                }
                 $delStmt->bind_param("i", $id);
                 $delStmt->execute();
                 $delStmt->close();
@@ -166,7 +185,10 @@ try {
             throw new Exception("Unauthorized access.");
         }
         $stmt = $conn->prepare("UPDATE time_entries SET approval_status = 'Rejected' WHERE id = ?");
-        if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
+        if (!$stmt) {
+            error_log("Prepare reject statement failed: " . $conn->error);
+            throw new Exception("An internal database error occurred.");
+        }
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $resultData = ["status" => "success", "success" => true];
@@ -177,9 +199,10 @@ try {
     echo json_encode(sanitize_utf8($resultData));
 
 } catch (Throwable $t) {
+    error_log("Update entry exception: " . $t->getMessage());
     $err = [
         "status" => "error", 
-        "message" => "Server Error: " . $t->getMessage()
+        "message" => $t->getMessage()
     ];
     echo json_encode(sanitize_utf8($err));
 }

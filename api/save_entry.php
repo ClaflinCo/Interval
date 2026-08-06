@@ -40,7 +40,7 @@ if(empty($project) || empty($entry_date) || empty($check_in) || empty($check_out
 
 // Helper function to check project access
 function check_project_access($conn, $username, $role, $proj) {
-    if ($role === 'Admin') return true;
+    if ($role === 'Admin' || $role === 'C-Suite') return true;
     $accessStmt = $conn->prepare("SELECT assigned, created_by FROM projects WHERE name = ?");
     if (!$accessStmt) return false;
     $accessStmt->bind_param("s", $proj);
@@ -115,6 +115,7 @@ if ($action === 'update' && !empty($id)) {
 if($stmt->execute()){
     echo json_encode(["success" => true, "id" => ($action === 'update' ? $id : $stmt->insert_id)]);
 } else {
-    echo json_encode(["status" => "error", "message" => "Database Error: " . $stmt->error]);
+    error_log("Save entry database error: " . $stmt->error);
+    echo json_encode(["status" => "error", "message" => "An internal database error occurred."]);
 }
 ?>

@@ -52,7 +52,8 @@ if ($method === 'GET') {
     $stmt = $conn->prepare("SELECT supervisor, project, request_type FROM project_change_requests WHERE id = ?");
     if (!$stmt) {
         http_response_code(500);
-        echo json_encode(["success" => false, "message" => "Database error: " . $conn->error]);
+        error_log("Prepare statement failed in admin_change_requests.php: " . $conn->error);
+        echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
         exit;
     }
     $stmt->bind_param("s", $id);
@@ -81,13 +82,15 @@ if ($method === 'GET') {
     if (!$upStmt) {
         $conn->rollback();
         http_response_code(500);
-        echo json_encode(["success" => false, "message" => "Prepare update stmt failed: " . $conn->error]);
+        error_log("Prepare update stmt failed in admin_change_requests.php: " . $conn->error);
+        echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
         exit;
     }
     $upStmt->bind_param("sss", $status, $adminUser, $id);
     if (!$upStmt->execute()) {
         $success = false;
-        $errorMsg = "Failed to update status: " . $upStmt->error;
+        error_log("Failed to update status in admin_change_requests.php: " . $upStmt->error);
+        $errorMsg = "An internal database error occurred.";
     }
     $upStmt->close();
 
@@ -102,12 +105,14 @@ if ($method === 'GET') {
         $notifStmt = $conn->prepare($notifSql);
         if (!$notifStmt) {
             $success = false;
-            $errorMsg = "Prepare notification stmt failed: " . $conn->error;
+            error_log("Prepare notification stmt failed in admin_change_requests.php: " . $conn->error);
+            $errorMsg = "An internal database error occurred.";
         } else {
             $notifStmt->bind_param("sssss", $notifId, $supervisor, $notifType, $title, $msg);
             if (!$notifStmt->execute()) {
                 $success = false;
-                $errorMsg = "Failed to execute notification: " . $notifStmt->error;
+                error_log("Failed to execute notification in admin_change_requests.php: " . $notifStmt->error);
+                $errorMsg = "An internal database error occurred.";
             }
             $notifStmt->close();
         }

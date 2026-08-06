@@ -34,7 +34,8 @@ $sql = "INSERT INTO notifications (id, username, type, title, msg, month)
         VALUES (?, ?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
-    echo json_encode(["success" => false, "message" => "Prepare statement failed: " . $conn->error]);
+    error_log("Prepare statement failed in save_notification.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 
@@ -44,7 +45,8 @@ $stmt->bind_param("ssssss", $id, $username, $type, $title, $msg, $month_param);
 if ($stmt->execute()) {
     echo json_encode(["success" => true, "id" => $id]);
 } else {
-    echo json_encode(["success" => false, "message" => $stmt->error]);
+    error_log("Execute statement failed in save_notification.php: " . $stmt->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
 }
 $stmt->close();
 ?>

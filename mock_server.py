@@ -5,11 +5,11 @@ PORT = 8000
 MOCK_DATA = {
     "projects": ["vCIO", "Shadow IT", "Network Admin", "Professional Services", "IT Project Manager"],
     "projectsMeta": {
-        "vCIO": {"assigned": "admin, employee", "customer": "Thrive LLC", "duration": 12, "created_by": "admin", "services": "vCIO, Professional Services", "active": True},
-        "Shadow IT": {"assigned": "admin", "customer": "Shadow Corp", "duration": 6, "created_by": "admin", "services": "Shadow IT, Professional Services", "active": True},
-        "Network Admin": {"assigned": "admin, employee", "customer": "Netlink LLC", "duration": 12, "created_by": "admin", "services": "Network Admin, Professional Services", "active": True},
-        "Professional Services": {"assigned": "admin", "customer": "Client Services", "duration": 1, "created_by": "admin", "services": "Professional Services", "active": True},
-        "IT Project Manager": {"assigned": "admin", "customer": "Project Corp", "duration": 12, "created_by": "admin", "services": "IT Project Manager, Professional Services", "active": True}
+        "vCIO": {"assigned": "admin, employee", "customer": "Thrive LLC", "duration": 12, "created_by": "admin", "services": "vCIO, Professional Services", "subscription_hours": "vCIO_10.0", "completed": 0, "active": True},
+        "Shadow IT": {"assigned": "admin", "customer": "Shadow Corp", "duration": 6, "created_by": "admin", "services": "Shadow IT, Professional Services", "subscription_hours": "", "completed": 0, "active": True},
+        "Network Admin": {"assigned": "admin, employee", "customer": "Netlink LLC", "duration": 12, "created_by": "admin", "services": "Network Admin, Professional Services", "subscription_hours": "", "completed": 0, "active": True},
+        "Professional Services": {"assigned": "admin", "customer": "Client Services", "duration": 1, "created_by": "admin", "services": "Professional Services", "subscription_hours": "", "completed": 0, "active": True},
+        "IT Project Manager": {"assigned": "admin", "customer": "Project Corp", "duration": 12, "created_by": "admin", "services": "IT Project Manager, Professional Services", "subscription_hours": "IT Project Manager_15.0", "completed": 0, "active": True}
     },
     "allotments": {
         "June": {"vCIO": 30.0, "Shadow IT": 40.0, "Network Admin": 50.0, "Professional Services": 0.0, "IT Project Manager": 0.0}
@@ -54,11 +54,11 @@ MOCK_DATA = {
         }
     ],
     "services": [
-        {"id": 1, "service": "vCIO", "created_by": "System"},
-        {"id": 2, "service": "Shadow IT", "created_by": "System"},
-        {"id": 3, "service": "Professional Services", "created_by": "System"},
-        {"id": 4, "service": "Network Admin", "created_by": "System"},
-        {"id": 5, "service": "IT Project Manager", "created_by": "System"}
+        {"id": 1, "service": "vCIO", "created_by": "System", "is_subscription": 1},
+        {"id": 2, "service": "Shadow IT", "created_by": "System", "is_subscription": 0},
+        {"id": 3, "service": "Professional Services", "created_by": "System", "is_subscription": 0},
+        {"id": 4, "service": "Network Admin", "created_by": "System", "is_subscription": 0},
+        {"id": 5, "service": "IT Project Manager", "created_by": "System", "is_subscription": 1}
     ]
 }
 
@@ -299,6 +299,11 @@ class MockHandler(http.server.SimpleHTTPRequestHandler):
                         del MOCK_DATA['allotments'][m][originalName]
                 # Note: time entries are intentionally preserved so historical logs remain intact.
                 response = {"success": True, "message": "Project deleted successfully."}
+            elif action == 'toggle_completed':
+                completed = int(data.get('completed', 0))
+                if originalName in MOCK_DATA['projectsMeta']:
+                    MOCK_DATA['projectsMeta'][originalName]['completed'] = completed
+                response = {"success": True, "message": "Project completed status updated."}
             elif action == 'update':
                 name = data.get('name', '').strip()
                 customer = data.get('customer', '').strip()

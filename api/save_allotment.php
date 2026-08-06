@@ -57,7 +57,7 @@ foreach ($allotmentsToSave as $item) {
     $allot = $item['allotment'];
     
     // For Supervisor, check if they have access to this project
-    if ($role === 'Supervisor' || $role === 'C-Suite') {
+    if ($role === 'Supervisor') {
         $accessStmt = $conn->prepare("SELECT assigned, created_by FROM projects WHERE name = ?");
         $accessStmt->bind_param("s", $proj);
         $accessStmt->execute();
@@ -90,7 +90,8 @@ foreach ($allotmentsToSave as $item) {
     
     if (!$stmt->execute()) {
         $success = false;
-        $errorMsg = $stmt->error;
+        error_log("Save allotment execute failed in save_allotment.php: " . $stmt->error);
+        $errorMsg = "An internal database error occurred.";
         $stmt->close();
         break;
     }
@@ -102,7 +103,8 @@ foreach ($allotmentsToSave as $item) {
         $upStmt->bind_param("ss", $assignedVal, $proj);
         if (!$upStmt->execute()) {
             $success = false;
-            $errorMsg = $upStmt->error;
+            error_log("Update project assigned execute failed in save_allotment.php: " . $upStmt->error);
+            $errorMsg = "An internal database error occurred.";
             $upStmt->close();
             break;
         }

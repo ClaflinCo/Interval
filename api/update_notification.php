@@ -39,7 +39,8 @@ if ($action === 'read') {
 
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
-    echo json_encode(["success" => false, "message" => "Prepare statement failed: " . $conn->error]);
+    error_log("Prepare statement failed in update_notification.php: " . $conn->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
     exit;
 }
 
@@ -48,7 +49,8 @@ $stmt->bind_param("ss", $id, $username);
 if ($stmt->execute()) {
     echo json_encode(["success" => true, "affected" => $stmt->affected_rows]);
 } else {
-    echo json_encode(["success" => false, "message" => $stmt->error]);
+    error_log("Execute statement failed in update_notification.php: " . $stmt->error);
+    echo json_encode(["success" => false, "message" => "An internal database error occurred."]);
 }
 $stmt->close();
 ?>

@@ -117,7 +117,8 @@ if($user = $result->fetch_assoc()){
 }
 
 } catch (Throwable $e) {
+    error_log("Login error: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Server Error: " . $e->getMessage()]);
+    echo json_encode(["status" => "error", "message" => "An internal server error occurred."]);
 }
 ?>
