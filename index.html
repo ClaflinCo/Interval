@@ -2385,7 +2385,8 @@ function renderMonth(){
       totalAllotment += pAllot;
       totalUsed += pUsed;
 
-      // Calculate subscription allotments and usage for this project
+      // Calculate subscription allotments, usage, and remaining for this project by service name
+      const subDetails = [];
       let pSubAllot = 0;
       const meta = PROJECTS_META[pName] || {};
       const subscriptionHours = meta.subscription_hours || '';
@@ -2393,21 +2394,26 @@ function renderMonth(){
         subscriptionHours.split(',').forEach(part => {
           const subparts = part.trim().split('_');
           if (subparts.length >= 2) {
-            pSubAllot += parseFloat(subparts.pop());
+            const hours = parseFloat(subparts.pop());
+            const service = subparts.join('_');
+            
+            pSubAllot += hours;
+            
+            const used = md.entries.filter(e => {
+              if (e.project !== pName) return false;
+              const entryServices = (e.services || '').split(',').map(x => x.trim());
+              return entryServices.includes(service);
+            }).reduce((s, e) => s + calcHours(e), 0);
+            
+            subDetails.push({
+              service,
+              allotment: hours,
+              used,
+              remaining: hours - used
+            });
           }
         });
       }
-      
-      const pSubUsed = md.entries.filter(e => {
-        if (e.project !== pName) return false;
-        const entryServices = (e.services || '').split(',').map(x => x.trim());
-        return entryServices.some(sName => {
-          const sObj = SERVICES.find(x => x.service === sName);
-          return sObj && !!sObj.is_subscription;
-        });
-      }).reduce((s, e) => s + calcHours(e), 0);
-      
-      const pSubRem = pSubAllot - pSubUsed;
 
       const isSingle = statsList.length === 1;
       const rowStyle = isSingle 
@@ -2417,13 +2423,13 @@ function renderMonth(){
       const label = `<span>${esc(pName)}${esc(cust)}</span>`;
       
       const allotVal = pSubAllot > 0 
-        ? `${pAllot} <span style="font-size:0.75em; color:var(--green); font-weight:bold;">(${pSubAllot} sub)</span>` 
+        ? `${pAllot} <span style="font-size:0.85em; color:var(--green); font-weight:bold;">(${subDetails.map(d => `${d.allotment} ${d.service}`).join(', ')})</span>` 
         : `${pAllot}`;
       const usedVal = pSubAllot > 0 
-        ? `${fmtH(pUsed)} <span style="font-size:0.75em; color:var(--green); font-weight:bold;">(${fmtH(pSubUsed)} sub)</span>` 
+        ? `${fmtH(pUsed)} <span style="font-size:0.85em; color:var(--green); font-weight:bold;">(${subDetails.map(d => `${fmtH(d.used)} ${d.service}`).join(', ')})</span>` 
         : `${fmtH(pUsed)}`;
       const remVal = pSubAllot > 0 
-        ? `${fmtH(pRem)} <span style="font-size:0.75em; color:var(--green); font-weight:bold;">(${fmtH(pSubRem)} sub)</span>` 
+        ? `${fmtH(pRem)} <span style="font-size:0.85em; color:var(--green); font-weight:bold;">(${subDetails.map(d => `${fmtH(d.remaining)} ${d.service}`).join(', ')})</span>` 
         : `${fmtH(pRem)}`;
 
       allotHtml += `<div style="${rowStyle}">${label}<span>${allotVal}</span></div>`;
@@ -2521,7 +2527,7 @@ function renderMonth(){
       return sObj && !!sObj.is_subscription;
     });
     if (hasSubService) {
-      tdServices.innerHTML = `${esc(e.services || '')} <span style="color:var(--green); font-weight:700; font-size:0.65rem; padding: 2px 4px; background: var(--green-light); border-radius: 4px; margin-left: 4px;">SUB</span>`;
+      tdServices.innerHTML = `${esc(e.services || '')} <span style="color:var(--green); font-weight:700; font-size:0.8em; padding: 2px 4px; background: var(--green-light); border-radius: 4px; margin-left: 4px;">${esc(entryService)}</span>`;
     } else {
       tdServices.textContent = e.services || '—';
     }
@@ -2571,23 +2577,19 @@ function renderMonth(){
     const tdTotalHours = document.createElement('td');
     tdTotalHours.className = 'td-hours td-center';
     tdTotalHours.style.color = 'var(--navy2)';
-    let hText = fmtH(h);
+    tdTotalHours.style.fontSize = '0.95rem';
+    
+    let hoursHtml = fmtH(h);
     if (subRem !== null) {
       tdTotalHours.style.color = 'var(--green)';
       tdTotalHours.style.fontWeight = 'bold';
-      hText += ' (sub)';
+      hoursHtml = `${fmtH(h)} <span style="font-size:0.85em; font-weight:bold;">(${esc(entryService)})</span>`;
     }
+    
     if (over !== null) {
-      const hoursText = document.createTextNode(hText);
-      tdTotalHours.appendChild(hoursText);
-      
-      const detailsDiv = document.createElement('div');
-      detailsDiv.style.fontSize = '.65rem';
-      detailsDiv.style.opacity = '.7';
-      detailsDiv.textContent = `(${fmtH(over)} x ${sc})`;
-      tdTotalHours.appendChild(detailsDiv);
+      tdTotalHours.innerHTML = hoursHtml + `<div style="font-size: .65rem; opacity: .7; font-weight: normal; color: var(--ink2);">(${fmtH(over)} x ${sc})</div>`;
     } else {
-      tdTotalHours.textContent = hText;
+      tdTotalHours.innerHTML = hoursHtml;
     }
     tr.appendChild(tdTotalHours);
     
@@ -2599,7 +2601,7 @@ function renderMonth(){
     const tdRem = document.createElement('td');
     tdRem.className = 'td-rem' + (rem < 0 ? ' exceeded' : (rem < 5 ? ' warn' : ''));
     if (subRem !== null) {
-      tdRem.innerHTML = `${fmtH(rem)} <div style="font-size:0.65rem; color:var(--green); font-weight:bold;">(${fmtH(subRem)} sub)</div>`;
+      tdRem.innerHTML = `${fmtH(rem)} <div style="font-size:0.75rem; color:var(--green); font-weight:bold;">(${fmtH(subRem)} ${esc(entryService)})</div>`;
     } else {
       tdRem.textContent = fmtH(rem);
     }
