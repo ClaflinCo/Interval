@@ -1,5 +1,5 @@
 # Block browser access to sensitive files
-<FilesMatch "^\.env|config\.sample\.php|sync_db\.php|mock_server\.py|xlsx_server\.py$">
+<FilesMatch "^\.env|config\.sample\.php|mock_server\.py|xlsx_server\.py$">
     Order allow,deny
     Deny from all
 </FilesMatch>
